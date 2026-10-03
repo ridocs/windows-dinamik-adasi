@@ -285,6 +285,8 @@
 
                                 <!-- Sağ üst köşe: beğen (ve sıradakiler); yalnız Spotify çalarken ve hesap bağlıyken -->
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-6,0,0">
+                                    <!-- Ses aygıtı ve seviye: karışım panelini açar (çalan uygulama en üstte) -->
+                                    <Button Style="{StaticResource SimgeDugme}" Width="28" Height="28" FontSize="12" Content="&#xE9E9;" ToolTip="Bu uygulamanın ses aygıtı ve seviyesi" Click="KarisimAc_Click"/>
                                     <!-- Panel açıkken ses değişince 1,5 sn görünen rozet (ses çubuğu kaldırıldı) -->
                                     <Border x:Name="MedyaSesRozet" CornerRadius="9" Background="#14FFFFFF" Padding="7,2" Margin="0,5,6,0" VerticalAlignment="Top" Visibility="Collapsed">
                                         <StackPanel Orientation="Horizontal">

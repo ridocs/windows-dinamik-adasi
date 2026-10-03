@@ -21,6 +21,7 @@ public sealed class KarisimServisi
         public string AygitKisa { get; set; } = "";
         public string AygitAd { get; set; } = "";
         public bool Kalici { get; set; }                 // kullanıcı bu uygulamaya aygıt atamış
+        public bool Aktif { get; set; }                  // şu an ses çalıyor
         public System.Windows.Media.ImageSource? Simge { get; set; }
 
         private float _seviye; private bool _sessiz;
@@ -91,13 +92,13 @@ public sealed class KarisimServisi
                     if (!sonuc.TryGetValue(anahtar, out var o))
                     {
                         o = onceki != null && onceki.TryGetValue(anahtar, out var eski) ? eski : new Oturum { Ad = OzetServisi.UygulamaAdi(ad), Exe = exe, Surec = ad };
-                        o.Pidler.Clear(); o.Sesler.Clear();
+                        o.Pidler.Clear(); o.Sesler.Clear(); o.Aktif = false;
                         o.AygitId = d.ID; o.AygitAd = d.FriendlyName; o.AygitKisa = Kisalt(d.FriendlyName);
                         sonuc[anahtar] = o;
                     }
                     o.Pidler.Add(pid);
                     o.Sesler.Add(s.SimpleAudioVolume);
-                    if (s.State == AudioSessionState.AudioSessionStateActive) { o.AygitId = d.ID; o.AygitAd = d.FriendlyName; o.AygitKisa = Kisalt(d.FriendlyName); }
+                    if (s.State == AudioSessionState.AudioSessionStateActive) { o.Aktif = true; o.AygitId = d.ID; o.AygitAd = d.FriendlyName; o.AygitKisa = Kisalt(d.FriendlyName); }
                 }
             }
             foreach (var o in sonuc.Values)
@@ -109,7 +110,7 @@ public sealed class KarisimServisi
             }
         }
         catch { }
-        return sonuc.Values.OrderBy(o => o.Ad, StringComparer.OrdinalIgnoreCase).ToList();
+        return sonuc.Values.OrderByDescending(o => o.Aktif).ThenBy(o => o.Ad, StringComparer.OrdinalIgnoreCase).ToList();   // çalanlar üstte
     }
 
     public void SeviyeAyarla(Oturum o, float v)
