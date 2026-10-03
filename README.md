@@ -23,6 +23,7 @@ Kişisel kullanım için geliştirildi, topluluğa açıldı. Türkçe arayüz, 
 
 **Boş panel**
 - Büyük saat, tarih, CPU / RAM / sunucu (SRV) halkaları, ağ hızı, Tailscale durumu, ses çubuğu.
+- Ses karışımı: uygulama başına ses seviyesi, sessiz ve çıkış aygıtı (örneğin iki monitörün hoparlörleri arasında yönlendirme), Windows'un "Uygulama ses ve cihaz tercihleri" sayfasına gerek kalmadan.
 - Kısayol çubuğu: kurulu uygulamalardan seçilen simgeler, sürükle-bırak ile düzenleme.
 - Çalışma düzenleri: açık pencerelerin yerleşimini kaydet, tek tıkla geri kur (kapalı uygulamalar açılır).
 - Claude'a sor: kapsülün içinde soru, seçili metni özetle / çevir, panoyu özetle. API anahtarı yoksa makinedeki Claude Code CLI kullanılır.

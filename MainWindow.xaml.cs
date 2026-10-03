@@ -41,6 +41,10 @@ public partial class MainWindow : Window
     private readonly SozServisi _soz = new();               // şarkı sözleri (lrclib)
     private readonly GpuServisi _gpu = new();               // oyun katmanı: GPU sıcaklık/yük
     private readonly ClaudeServisi _claude = new();         // Claude'a sor
+    private readonly KarisimServisi _karisim = new();       // uygulama başına ses ve çıkış aygıtı
+    private readonly System.Collections.ObjectModel.ObservableCollection<KarisimServisi.Oturum> _karisimListe = new();
+    private readonly DispatcherTimer _karisimZaman = new() { Interval = TimeSpan.FromSeconds(2) };
+    private bool _karisimGoster, _karisimYenileniyor;
     private readonly DispatcherTimer _sesRozetZaman = new() { Interval = TimeSpan.FromMilliseconds(1600) };   // medya panelinde ses rozeti
     private readonly OzetServisi _ozet = new();             // günün özeti + kesintisiz çalışma sayacı
     private string _ozetGosterildi = "";                    // "yyyy-MM-dd": o günün akşam özeti gösterildi
@@ -174,6 +178,8 @@ public partial class MainWindow : Window
         HaznePanel.TelefonaIstendi += () => _ = HazneTelefonaAsync();
         HaznePanel.EpostaIstendi += HazneEposta;
         _ozet.Yukle();
+        KarisimListe.ItemsSource = _karisimListe;
+        _karisimZaman.Tick += (_, _) => { if (_karisimGoster && GenisKarisim.Visibility == Visibility.Visible) KarisimYenile(yenidenBoyutla: true); else _karisimZaman.Stop(); };
         KompaktCanavar.MouseLeftButtonDown += (_, e) => { KompaktCanavar.Tepki(); e.Handled = true; };
         GenisCanavar.MouseLeftButtonDown += (_, e) => { GenisCanavar.Tepki(); e.Handled = true; };
         HaznePanel.ClaudeIstendi += () =>
@@ -390,6 +396,66 @@ public partial class MainWindow : Window
         bool sozGoster = _ayar.SozlerAcik && SozMetin.Visibility == Visibility.Visible && _sonSozSatiri.Length > 0 && _sonSozSatiri != "♪";
         string hedef = sozGoster ? _sonSozSatiri : _durum.Baslik;
         if (KompaktBaslik.Text != hedef) KompaktBaslik.Text = hedef;
+    }
+
+    // ---------- Ses karışımı ----------
+
+    private void KarisimAc_Click(object sender, RoutedEventArgs e) { _karisimGoster = true; _genis = true; _daraltGecikme.Stop(); Genislet(); }
+    private void KarisimKapat_Click(object sender, RoutedEventArgs e) { _karisimGoster = false; _karisimZaman.Stop(); if (_genis) Genislet(); }
+
+    /// Oturum listesini servisten tazele; satır nesnelerini koru ki kaydırıcı sıçramasın
+    private void KarisimYenile(bool yenidenBoyutla = false)
+    {
+        _karisimYenileniyor = true;
+        try
+        {
+            var onceki = _karisimListe.ToDictionary(o => o.Surec, StringComparer.OrdinalIgnoreCase);
+            var yeni = _karisim.Oturumlar(onceki);
+            foreach (var o in yeni) if (o.Simge == null && o.Exe.Length > 0 && System.IO.File.Exists(o.Exe)) { try { o.Simge = HazneDeposu.DosyaSimgesi(o.Exe); } catch { } }
+            int eskiSayi = _karisimListe.Count;
+            for (int i = _karisimListe.Count - 1; i >= 0; i--) if (!yeni.Any(y => y.Surec.Equals(_karisimListe[i].Surec, StringComparison.OrdinalIgnoreCase))) _karisimListe.RemoveAt(i);
+            foreach (var o in yeni) if (!_karisimListe.Contains(o)) _karisimListe.Add(o);
+            KarisimBos.Visibility = _karisimListe.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            string vars = _karisim.VarsayilanAygitId;
+            var aygit = _karisim.Aygitlar().FirstOrDefault(a => a.Id == vars);
+            KarisimVarsayilan.Text = aygit != null ? "varsayılan: " + aygit.Kisa : "";
+            if (yenidenBoyutla && _karisimListe.Count != eskiSayi && _genis && GenisKarisim.Visibility == Visibility.Visible) Genislet();
+        }
+        finally { _karisimYenileniyor = false; }
+    }
+
+    private void KarisimSes_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_karisimYenileniyor || sender is not Slider s || s.Tag is not KarisimServisi.Oturum o) return;
+        if (Math.Abs(o.Seviye - e.NewValue) < 0.005) return;
+        _karisim.SeviyeAyarla(o, (float)e.NewValue);
+    }
+
+    private void KarisimSessiz_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button b && b.Tag is KarisimServisi.Oturum o) _karisim.SessizAyarla(o, !o.Sessiz);
+    }
+
+    /// Aygıt adına tıkla: listede sıradaki aygıt; sondan sonra sistem varsayılanı
+    private void KarisimAygit_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button b || b.Tag is not KarisimServisi.Oturum o) return;
+        var aygitlar = _karisim.Aygitlar();
+        if (aygitlar.Count == 0) return;
+        string? kaliciId = o.Pidler.Count > 0 ? AudioPolicyConfig.Oku(o.Pidler[0]) : null;
+        string simdikiId = kaliciId ?? o.AygitId;
+        int i = aygitlar.FindIndex(a => a.Id.Equals(simdikiId, StringComparison.OrdinalIgnoreCase));
+        string? hedefId; string hedefAd;
+        if (i >= 0 && i + 1 < aygitlar.Count) { hedefId = aygitlar[i + 1].Id; hedefAd = aygitlar[i + 1].Kisa; }
+        else if (kaliciId != null) { hedefId = null; hedefAd = "sistem varsayılanı"; }
+        else { hedefId = aygitlar[0].Id; hedefAd = aygitlar[0].Kisa; }
+        if (hedefId != null && hedefId.Equals(simdikiId, StringComparison.OrdinalIgnoreCase) && aygitlar.Count > 1) { hedefId = aygitlar[(i + 1) % aygitlar.Count].Id; hedefAd = aygitlar[(i + 1) % aygitlar.Count].Kisa; }
+        bool ok = _karisim.Yonlendir(o, hedefId);
+        Gunluk($"karisim yonlendir: {o.Surec} pid={string.Join(",", o.Pidler)} -> {hedefAd} ok={ok} {_karisim.SonHata}");
+        _kuyruk.Ekle(ok
+            ? new Duyuru(DuyuruTuru.Basari, $"{o.Ad} → {hedefAd}", hedefId == null ? "" : "uygulama sesini bu aygıttan çalar", Simge: "", SaniyeOverride: 3, Anahtar: "karisim")
+            : new Duyuru(DuyuruTuru.Uyari, "Yönlendirilemedi", _karisim.SonHata, Simge: "", SaniyeOverride: 4, Anahtar: "karisim"));
+        Dispatcher.BeginInvoke(async () => { await Task.Delay(700); if (_karisimGoster) KarisimYenile(); }, System.Windows.Threading.DispatcherPriority.Background);
     }
 
     // ---------- Claude'a sor ----------
@@ -2141,6 +2207,22 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Ses karışımı paneli: düğmeyle istendiyse
+        if (_karisimGoster)
+        {
+            KarisimYenile();
+            GenisKarisim.Visibility = Visibility.Visible;
+            GenisKarisim.Height = double.NaN;
+            GenisKarisim.UpdateLayout();
+            GenisKarisim.Measure(new Size(380, double.PositiveInfinity));
+            double yk = Math.Clamp(GenisKarisim.DesiredSize.Height + 2, 100, 460);
+            GenisKarisim.Height = yk - 2;
+            Gecis(GenisKarisim, 380, yk, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
+            Ada.CornerRadius = new CornerRadius(26);
+            _karisimZaman.Start();
+            return;
+        }
+
         // Claude'a sor paneli: düğmeyle istendiyse, yükseklik içeriğe göre
         if (_soruGoster && _ayar.ClaudeAcik)
         {
@@ -2192,6 +2274,7 @@ public partial class MainWindow : Window
         _genis = false;
         if (_odakSerbest) CevapKapat();   // odak izni geri alınsın
         if (_soruGoster && !_soruBekliyor && DateTime.Now - _soruSonKullanim > TimeSpan.FromSeconds(90)) _soruGoster = false;   // uzun süre kullanılmadıysa paneli unut
+        if (_karisimGoster) { _karisimGoster = false; _karisimZaman.Stop(); }
         _hazneGoster = false;
         Gunluk($"daralt: goruldu={_bildirimGoruldu} okunmamis={_okunmamis.Count} aktifDuyuru={_aktifDuyuru != null} kuyruk={_kuyruk.Sayi}");
         if (_bildirimGoruldu) { _bildirimGoruldu = false; _okunmamis.Clear(); }   // fare çekildi: okundu
@@ -2238,7 +2321,7 @@ public partial class MainWindow : Window
     /// Hedef paneli görünür yapar, diğerlerini soldurur, kapsülü yeni boyuta taşır.
     private void Gecis(UIElement hedef, double genislik, double yukseklik, IEasingFunction ease, int ms)
     {
-        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru })
+        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim })
         {
             if (ReferenceEquals(p, hedef)) continue;
             p.IsHitTestVisible = false;
@@ -2340,6 +2423,9 @@ public partial class MainWindow : Window
                     case "mini": _testMini = p.Length > 1 && p[1] == "1"; if (!_genis) Daralt(); break;
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
+                    case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
+                    case "karisim-liste": { KarisimYenile(); foreach (var o in _karisimListe) Gunluk($"karisim: {o.Surec} ({o.Ad}) pid={string.Join(",", o.Pidler)} aygit={o.AygitKisa} kalici={o.Kalici} ses={o.Yuzde} sessiz={o.Sessiz}"); foreach (var a in _karisim.Aygitlar()) Gunluk($"karisim aygit: {a.Kisa} | {a.Ad} | {a.Id}"); break; }
+                    case "karisim-yonlendir": { var q = string.Join(' ', p.Skip(1)).Split('|'); KarisimYenile(); var o = _karisimListe.FirstOrDefault(x => x.Surec.Equals(q[0].Trim(), StringComparison.OrdinalIgnoreCase)); if (o == null) { Gunluk("karisim: oturum yok " + q[0]); break; } string? id = q.Length > 1 && !q[1].Trim().Equals("varsayilan", StringComparison.OrdinalIgnoreCase) ? _karisim.Aygitlar().FirstOrDefault(a => a.Ad.Contains(q[1].Trim(), StringComparison.OrdinalIgnoreCase))?.Id : null; bool ok = _karisim.Yonlendir(o, id); Gunluk($"karisim-yonlendir: {o.Surec} -> {id ?? "varsayilan"} ok={ok} hata={_karisim.SonHata} okunan={AudioPolicyConfig.Oku(o.Pidler[0]) ?? "yok"}"); break; }
                     case "spotify-ham": { string yol = string.Join(' ', p.Skip(1)); _ = _spotify.HamAsync(yol).ContinueWith(t => Gunluk($"spotify-ham {yol} -> {t.Result}")); break; }
                     case "spotify-ara": { var parca = string.Join(' ', p.Skip(1)).Split('|'); _ = _spotify.AraAsync(parca[0].Trim(), parca.Length > 1 ? parca[1].Trim() : "").ContinueWith(t => Gunluk($"spotify-ara: parca={t.Result.Parca?.Ad ?? "yok"} id={t.Result.Parca?.Id} begenildi={t.Result.Begenildi} hata={_spotify.SonHata}")); break; }
                     case "spotify-begen": { var parca = string.Join(' ', p.Skip(1)).Split('|'); _ = Task.Run(async () => { var (pp, bb) = await _spotify.AraAsync(parca[0].Trim(), parca.Length > 1 ? parca[1].Trim() : ""); if (pp == null) { Gunluk("spotify-begen: parca yok " + _spotify.SonHata); return; } bool ok1 = await _spotify.BegenAyarlaAsync(pp.Id, !bb); var (_, b2) = await _spotify.AraAsync(parca[0].Trim(), parca.Length > 1 ? parca[1].Trim() : ""); bool ok2 = await _spotify.BegenAyarlaAsync(pp.Id, bb); Gunluk($"spotify-begen: {pp.Ad} once={bb} yaz={ok1} okundu={b2} gerial={ok2} hata={_spotify.SonHata}"); }); break; }
