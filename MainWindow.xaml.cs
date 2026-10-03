@@ -180,6 +180,7 @@ public partial class MainWindow : Window
         _ozet.Yukle();
         KarisimListe.ItemsSource = _karisimListe;
         _karisimZaman.Tick += (_, _) => { if (_karisimGoster && GenisKarisim.Visibility == Visibility.Visible) KarisimYenile(yenidenBoyutla: true); else _karisimZaman.Stop(); };
+        _fareBekleZaman.Tick += (_, _) => { _fareBekleZaman.Stop(); if (!Ada.IsMouseOver && _genis) { _daraltGecikme.Stop(); _daraltGecikme.Start(); } };
         KompaktCanavar.MouseLeftButtonDown += (_, e) => { KompaktCanavar.Tepki(); e.Handled = true; };
         GenisCanavar.MouseLeftButtonDown += (_, e) => { GenisCanavar.Tepki(); e.Handled = true; };
         HaznePanel.ClaudeIstendi += () =>
@@ -400,7 +401,7 @@ public partial class MainWindow : Window
 
     // ---------- Ses karışımı ----------
 
-    private void KarisimAc_Click(object sender, RoutedEventArgs e) { _karisimGoster = true; _genis = true; _daraltGecikme.Stop(); Genislet(); }
+    private void KarisimAc_Click(object sender, RoutedEventArgs e) { _karisimGoster = true; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); Genislet(); }
     private void KarisimKapat_Click(object sender, RoutedEventArgs e) { _karisimGoster = false; _karisimZaman.Stop(); if (_genis) Genislet(); }
 
     /// Oturum listesini servisten tazele; satır nesnelerini koru ki kaydırıcı sıçramasın
@@ -535,6 +536,7 @@ public partial class MainWindow : Window
 
     private void SoruPaneliAc(bool odakla)
     {
+        FareBekleBaslat();
         if (SoruBaslik.Text != "Claude'a sor") { SoruBaslik.Text = "Claude'a sor"; SoruIpucu.Text = "Bir şey sor… Enter gönderir"; }
         _soruGoster = true;
         _soruSonKullanim = DateTime.Now;
@@ -1594,7 +1596,7 @@ public partial class MainWindow : Window
                 Width = double.NaN, Padding = new Thickness(10, 0, 10, 0), Margin = new Thickness(0, 0, 12, 0),
                 ToolTip = "Hazne", Content = icerik,
             };
-            hazneDugme.Click += (_, _) => { _hazneGoster = true; Genislet(); };
+            hazneDugme.Click += (_, _) => { _hazneGoster = true; FareBekleBaslat(); Genislet(); };
             KisayolCubugu.Children.Add(hazneDugme);
         }
 
@@ -2156,6 +2158,7 @@ public partial class MainWindow : Window
 
     private void Ada_MouseEnter(object sender, MouseEventArgs e)
     {
+        _fareBekle = false; _fareBekleZaman.Stop();
         _daraltGecikme.Stop();
         if (_dropSonrasi || _surukleme) return; // bırakma sonrası duyuru gösteriliyor, genişleme yok
         if (_mini) return;                      // oyun katmanı: oyun imleci üstünden geçerse açılma
@@ -2165,9 +2168,15 @@ public partial class MainWindow : Window
         if (!_genis) { _genis = true; Genislet(); }
     }
 
+    // Düğmeyle açılan panel kapsülü küçültünce fare dışarıda kalabilir: hemen kapatma, kullanıcıya panele girmesi için süre tanı
+    private bool _fareBekle;
+    private readonly DispatcherTimer _fareBekleZaman = new() { Interval = TimeSpan.FromMilliseconds(2500) };
+    private void FareBekleBaslat() { _fareBekle = true; _ = Dispatcher.BeginInvoke(async () => { await Task.Delay(1200); _fareBekle = false; }); }   // 1,2 sn içinde küçülme olmazsa normal davranış
+
     private void Ada_MouseLeave(object sender, MouseEventArgs e)
     {
         _dropSonrasi = false;
+        if (_fareBekle) { _fareBekle = false; _fareBekleZaman.Stop(); _fareBekleZaman.Start(); return; }   // panel küçüldü, fare dışarıda kaldı: bekle
         _daraltGecikme.Stop();
         _daraltGecikme.Start();
     }
