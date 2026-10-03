@@ -43,6 +43,7 @@ public partial class AyarlarPenceresi : Window
         HavaAcik.IsChecked = _ayar.HavaAcik;
         ToplantiModuAcik.IsChecked = _ayar.ToplantiModuAcik;
         AgAcik.IsChecked = _ayar.AgAcik;
+        SesOsdGizle.IsChecked = _ayar.SesOsdGizle;
         IndirmeIzleAcik.IsChecked = _ayar.IndirmeIzleAcik;
         TelefondanHazneyeAcik.IsChecked = _ayar.TelefondanHazneyeAcik;
         SozlerAcik.IsChecked = _ayar.SozlerAcik;
@@ -167,6 +168,7 @@ public partial class AyarlarPenceresi : Window
         _ayar.HavaAcik = HavaAcik.IsChecked == true;
         _ayar.ToplantiModuAcik = ToplantiModuAcik.IsChecked == true;
         _ayar.AgAcik = AgAcik.IsChecked == true;
+        _ayar.SesOsdGizle = SesOsdGizle.IsChecked == true;
         _ayar.IndirmeIzleAcik = IndirmeIzleAcik.IsChecked == true;
         _ayar.TelefondanHazneyeAcik = TelefondanHazneyeAcik.IsChecked == true;
         _ayar.SozlerAcik = SozlerAcik.IsChecked == true;

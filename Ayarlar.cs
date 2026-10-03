@@ -14,6 +14,7 @@ public sealed class Ayarlar
     public double Saydamlik { get; set; } = 1.0; // 0.5 .. 1.0
     public bool TamEkrandaGizle { get; set; } = true;
     public bool OyunKatmaniAcik { get; set; } = true;   // tam ekran OYUNDA gizlenme: ince şerit (saat, CPU, GPU, RAM); tarayıcı/video tam ekranında yine gizlen
+    public bool SesOsdGizle { get; set; } = true;   // Windows'un kendi ses barını gizle
     public string HizliYanit { get; set; } = "Oyundayım, birazdan yazarım.";   // oyunda Ctrl+Alt+Y
     public bool OyunSesProfiliAcik { get; set; } = true;
     public string OyunKulaklikAd { get; set; } = "Headphones";                   // aygıt adının parçası

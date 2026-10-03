@@ -57,6 +57,9 @@ public partial class MainWindow : Window
     private string _sesSeridiMetin = "";
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
     private readonly KarisimServisi _karisim = new();       // uygulama başına ses ve çıkış aygıtı
+    private readonly SesOsdServisi _sesOsd = new();         // Windows ses barını gizle
+    private readonly DispatcherTimer _osdZaman = new() { Interval = TimeSpan.FromMilliseconds(60) };
+    private int _osdSayac;
     private readonly System.Collections.ObjectModel.ObservableCollection<KarisimServisi.Oturum> _karisimListe = new();
     private readonly DispatcherTimer _karisimZaman = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _karisimGoster, _karisimYenileniyor;
@@ -192,6 +195,7 @@ public partial class MainWindow : Window
         HaznePanel.GeriIstendi += () => { _hazneGoster = false; _hazneSonEkleme = DateTime.MinValue; Genislet(); };
         HaznePanel.TelefonaIstendi += () => _ = HazneTelefonaAsync();
         _ozet.Yukle();
+        _osdZaman.Tick += (_, _) => { _sesOsd.Bastir(); if (++_osdSayac >= 12) _osdZaman.Stop(); };
         _sesSeridiZaman.Tick += (_, _) => { _sesSeridiZaman.Stop(); _sesSeridi = false; if (_onPlanTamEkran && !_mini && _ayar.TamEkrandaGizle) { _tamEkranGizli = true; Ada.Visibility = Visibility.Hidden; } else if (!_genis) Daralt(animasyonlu: false); };
         _indirme.Indirildi += yol => Dispatcher.BeginInvoke(() => IndirmeTamamlandi(yol));
         if (_ayar.IndirmeIzleAcik && _indirme.Baslat()) Gunluk("indirme izleniyor: " + _indirme.Klasor);
@@ -1120,6 +1124,7 @@ public partial class MainWindow : Window
 
     private void SesDegisti(float seviye, bool sessiz)
     {
+        if (_ayar.SesOsdGizle) { _osdSayac = 0; _osdZaman.Stop(); _osdZaman.Start(); }   // Windows'un ses barını bastır
         BosSes.Guncelle(seviye, sessiz);
         if (_tamEkranGizli && !_mini) { _sesSeridiMetin = (sessiz ? "sessiz" : $"ses %{(int)Math.Round(seviye * 100)}"); SesSeridiGoster(); return; }   // tam ekran video: kısa şerit
         if (_genis && GenisMedya.Visibility == Visibility.Visible)
@@ -1626,7 +1631,7 @@ public partial class MainWindow : Window
         KompaktCanavar.Visibility = goster ? Visibility.Visible : Visibility.Collapsed;
         GenisCanavar.Visibility = goster ? Visibility.Visible : Visibility.Collapsed;
         // Canavar varken kompakt kapsülde saat ve pil yok (kullanıcı isteği); kapatılırsa saat geri gelir
-        KompaktSaat.Visibility = goster ? Visibility.Collapsed : Visibility.Visible;
+        KompaktSaat.Visibility = Visibility.Visible;   // canavarın yanında saat her zaman görünür
         KompaktPil.Visibility = goster ? Visibility.Collapsed : Visibility.Visible;
         KompaktCanavar.Mod = mod;
         GenisCanavar.Mod = mod;

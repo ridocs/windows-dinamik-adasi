@@ -128,7 +128,7 @@
 
                         <StackPanel x:Name="KompaktBos" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0,12,0">
                             <k:Canavar x:Name="KompaktCanavar" Width="28" Height="28" Margin="2,0" VerticalAlignment="Center"/>
-                            <TextBlock x:Name="KompaktSaat" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" Text="00:00" Visibility="Collapsed"/>
+                            <TextBlock x:Name="KompaktSaat" FontSize="13" FontWeight="SemiBold" Margin="6,0,2,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text="00:00"/>
                             <StackPanel x:Name="KompaktHava" Orientation="Horizontal" Margin="10,0,0,0" Visibility="Collapsed">
                                 <TextBlock x:Name="KompaktHavaSimge" FontSize="11.5" FontFamily="Segoe UI Emoji" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text=""/>
                                 <TextBlock x:Name="KompaktHavaDerece" FontSize="11.5" Margin="4,0,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
