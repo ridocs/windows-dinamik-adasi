@@ -1050,6 +1050,10 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             MiniGpu.Foreground = _gpu.Sicaklik >= 85 ? new SolidColorBrush(Color.FromRgb(0xFF, 0x45, 0x3A))
                                : _gpu.Sicaklik >= 75 ? (Brush)FindResource("Vurgu") : (Brush)FindResource("MetinBirincil");
         }
+        bool mikAcik = _gizlilik.MikrofonKullanan.Length > 0, kamAcik = _gizlilik.KameraKullanan.Length > 0;
+        MiniGizlilik.Visibility = mikAcik || kamAcik ? Visibility.Visible : Visibility.Collapsed;
+        MiniGizlilikGlif.Text = ((char)(kamAcik ? 0xE722 : 0xE720)).ToString();
+        MiniGizlilik.ToolTip = kamAcik ? "Kamera kullanımda" : "Mikrofon kullanımda";
         MiniMesaj.Visibility = _okunmamis.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
         MiniMesajSayi.Text = _okunmamis.Count.ToString();
 
