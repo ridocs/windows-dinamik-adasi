@@ -464,9 +464,10 @@ public partial class MainWindow : Window
         var vars = new MenuItem { Header = "Sistem varsayılanını izle", IsCheckable = true, IsChecked = kaliciId == null, ToolTip = "Özel atama kaldırılır; Windows'un varsayılan aygıtı neyse oradan çalar" };
         vars.Click += (_, _) => KarisimYonlendir(o, null, "sistem varsayılanı");
         menu.Items.Add(vars);
-        menu.IsOpen = true;
+        _sonMenu = menu; menu.IsOpen = true;
     }
 
+    private ContextMenu? _sonMenu;   // test kancası menüyü kapatabilsin
     private void KarisimYonlendir(KarisimServisi.Oturum o, string? hedefId, string hedefAd)
     {
         bool ok = _karisim.Yonlendir(o, hedefId);
@@ -2452,6 +2453,7 @@ public partial class MainWindow : Window
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
                     case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }
+                    case "menu-kapat": if (_sonMenu != null) _sonMenu.IsOpen = false; break;
                     case "karisim-liste": { KarisimYenile(); foreach (var o in _karisimListe) Gunluk($"karisim: {o.Surec} ({o.Ad}) pid={string.Join(",", o.Pidler)} aygit={o.AygitKisa} kalici={o.Kalici} ses={o.Yuzde} sessiz={o.Sessiz}"); foreach (var a in _karisim.Aygitlar()) Gunluk($"karisim aygit: {a.Kisa} | {a.Ad} | {a.Id}"); break; }
                     case "karisim-yonlendir": { var q = string.Join(' ', p.Skip(1)).Split('|'); KarisimYenile(); var o = _karisimListe.FirstOrDefault(x => x.Surec.Equals(q[0].Trim(), StringComparison.OrdinalIgnoreCase)); if (o == null) { Gunluk("karisim: oturum yok " + q[0]); break; } string? id = q.Length > 1 && !q[1].Trim().Equals("varsayilan", StringComparison.OrdinalIgnoreCase) ? _karisim.Aygitlar().FirstOrDefault(a => a.Ad.Contains(q[1].Trim(), StringComparison.OrdinalIgnoreCase))?.Id : null; bool ok = _karisim.Yonlendir(o, id); Gunluk($"karisim-yonlendir: {o.Surec} -> {id ?? "varsayilan"} ok={ok} hata={_karisim.SonHata} okunan={AudioPolicyConfig.Oku(o.Pidler[0]) ?? "yok"}"); break; }
                     case "spotify-ham": { string yol = string.Join(' ', p.Skip(1)); _ = _spotify.HamAsync(yol).ContinueWith(t => Gunluk($"spotify-ham {yol} -> {t.Result}")); break; }

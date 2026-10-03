@@ -183,5 +183,92 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!-- ===== Kapsülle uyumlu koyu menüler (ContextMenu, MenuItem, ayraç) ===== -->
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HasDropShadow" Value="False"/>
+            <Setter Property="Foreground" Value="{StaticResource MetinBirincil}"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="#F40E0E12" BorderBrush="#2AFFFFFF" BorderThickness="1" CornerRadius="12" Padding="5" Margin="10" SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect BlurRadius="18" ShadowDepth="3" Opacity="0.55"/>
+                            </Border.Effect>
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="{StaticResource MetinBirincil}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Grid>
+                            <Border x:Name="Zemin" Background="Transparent" CornerRadius="7" Padding="9,6" Margin="0,1" MinWidth="150">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="18"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="12"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="Isaret" Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" RecognizesAccessKey="True" TextBlock.Foreground="{TemplateBinding Foreground}"/>
+                                    <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{StaticResource MetinIkincil}" FontSize="10.5" Margin="16,0,0,0" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="Ok" Grid.Column="3" Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="{StaticResource MetinIkincil}" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <Popup x:Name="PART_Popup" Placement="Right" HorizontalOffset="-4" VerticalOffset="-6" IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                   AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                <Border Background="#F40E0E12" BorderBrush="#2AFFFFFF" BorderThickness="1" CornerRadius="12" Padding="5" Margin="10" SnapsToDevicePixels="True">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="18" ShadowDepth="3" Opacity="0.55"/>
+                                    </Border.Effect>
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Zemin" Property="Background" Value="#1CFFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Isaret" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="True">
+                                <Setter TargetName="Ok" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <!-- Devre dışı öğeler menü başlığı olarak kullanılıyor: soluk, küçük -->
+                                <Setter Property="Foreground" Value="{StaticResource MetinIkincil}"/>
+                                <Setter Property="FontSize" Value="10.5"/>
+                                <Setter TargetName="Zemin" Property="Padding" Value="9,4,9,3"/>
+                                <Setter Property="Cursor" Value="Arrow"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="{x:Static MenuItem.SeparatorStyleKey}" TargetType="Separator">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Separator">
+                        <Border Height="1" Background="#1FFFFFFF" Margin="8,4"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Application.Resources>
 </Application>
