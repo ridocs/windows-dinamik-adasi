@@ -85,6 +85,7 @@ public sealed class Ayarlar
 
 
     // Günün özeti: akşam belirlenen saatte kapsülde gösterilir (uygulama süreleri, mesajlar, müzik, toplantı)
+    public string NotDosyasi { get; set; } = "";   // boşsa masaüstüDinamik Ada Notlar.md
     public bool OzetAcik { get; set; } = true;
     public string OzetSaat { get; set; } = "21:00";
 

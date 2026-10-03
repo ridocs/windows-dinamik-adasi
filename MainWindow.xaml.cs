@@ -195,6 +195,7 @@ public partial class MainWindow : Window
         HaznePanel.GeriIstendi += () => { _hazneGoster = false; _hazneSonEkleme = DateTime.MinValue; Genislet(); };
         HaznePanel.TelefonaIstendi += () => _ = HazneTelefonaAsync();
         _ozet.Yukle();
+        _hatirlatici.Yukle();
         _osdZaman.Tick += (_, _) => { _sesOsd.Bastir(); if (++_osdSayac >= 12) _osdZaman.Stop(); };
         _sesSeridiZaman.Tick += (_, _) => { _sesSeridiZaman.Stop(); _sesSeridi = false; if (_onPlanTamEkran && !_mini && _ayar.TamEkrandaGizle) { _tamEkranGizli = true; Ada.Visibility = Visibility.Hidden; } else if (!_genis) Daralt(animasyonlu: false); };
         _indirme.Indirildi += yol => Dispatcher.BeginInvoke(() => IndirmeTamamlandi(yol));
@@ -673,6 +674,45 @@ public partial class MainWindow : Window
 
     // ---------- Claude'a sor ----------
 
+
+    private readonly HatirlaticiServisi _hatirlatici = new();
+
+    private void NotKaydet(string metin)
+    {
+        if (metin.Length == 0) return;
+        try
+        {
+            string yol = string.IsNullOrWhiteSpace(_ayar.NotDosyasi)
+                ? System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Dinamik Ada Notlar.md")
+                : _ayar.NotDosyasi;
+            if (!System.IO.File.Exists(yol)) System.IO.File.WriteAllText(yol, "# Dinamik Ada Notları\n\n", System.Text.Encoding.UTF8);
+            System.IO.File.AppendAllText(yol, $"- {DateTime.Now:dd.MM HH:mm} — {metin}\n", System.Text.Encoding.UTF8);
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Not kaydedildi", metin.Length > 50 ? metin[..50] + "…" : metin, Simge: "", SaniyeOverride: 4));
+            Gunluk($"not: {metin}");
+        }
+        catch (Exception e) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "Not kaydedilemedi", e.Message, Simge: "", SaniyeOverride: 4)); }
+    }
+
+    private void HatirlaticiKur(string metin)
+    {
+        var sonuc = _hatirlatici.Ekle(metin);
+        if (sonuc == null)
+        {
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Zaman anlaşılmadı", "örn: hatırlat: 14:30 toplantı · 15 dk sonra çay · yarın 09:00 X", Simge: "", SaniyeOverride: 6));
+            return;
+        }
+        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Hatırlatıcı kuruldu", $"{HatirlaticiServisi.Bicimle(sonuc.Value.Zaman)} · {sonuc.Value.Metin}", Simge: "", SaniyeOverride: 5));
+        Gunluk($"hatirlatici: {sonuc.Value.Zaman:g} {sonuc.Value.Metin}");
+    }
+
+    private void HatirlaticiKontrol()
+    {
+        foreach (var h in _hatirlatici.Gecenler())
+        {
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "⏰ Hatırlatma", h.Metin, Simge: "", SaniyeOverride: 15, Anahtar: "hatirla-" + h.Id));
+            Gunluk($"hatirlatma dustu: {h.Metin}");
+        }
+    }
     // ---------- Günün özeti ve ruh hâli ----------
 
     private void OzetGoster(bool otomatik)
@@ -778,6 +818,13 @@ public partial class MainWindow : Window
         string soru = SoruKutu.Text.Trim();
         if (soru.Length == 0 || _soruBekliyor) return;
         SoruKutu.Text = "";
+        var on = System.Text.RegularExpressions.Regex.Match(soru, @"^(not|hatırlat|hatirlat|anımsat|hatırlatma)\s*:?\s+(.+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+        if (on.Success)
+        {
+            if (on.Groups[1].Value.StartsWith("not", StringComparison.OrdinalIgnoreCase)) NotKaydet(on.Groups[2].Value.Trim());
+            else HatirlaticiKur(on.Groups[2].Value.Trim());
+            return;
+        }
         _ = SoruGonderAsync(soru);
     }
 
@@ -1183,6 +1230,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         _sistem.Tik();
         if (_ayar.AgAcik) { _ag.Tik(); VpnDegisimDuyur(); }
         RuhHaliTik();
+        HatirlaticiKontrol();
         if (_genis && GenisBos.Visibility == Visibility.Visible) SistemHalkalariGuncelle();
 
         if (_hwnd != IntPtr.Zero)
@@ -2658,6 +2706,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
                     case "sor-kaydet": SoruKaydet_Click(this, new RoutedEventArgs()); break;
+                    case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
                     case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }
                     case "menu-kapat": if (_sonMenu != null) _sonMenu.IsOpen = false; break;
