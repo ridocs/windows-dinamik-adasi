@@ -38,7 +38,6 @@ public partial class AyarlarPenceresi : Window
         HavaAcik.IsChecked = _ayar.HavaAcik;
         ToplantiModuAcik.IsChecked = _ayar.ToplantiModuAcik;
         AgAcik.IsChecked = _ayar.AgAcik;
-        DuzenListesiDoldur();
         SozlerAcik.IsChecked = _ayar.SozlerAcik;
         ClaudeAcik.IsChecked = _ayar.ClaudeAcik;
         ClaudeApiKey.Text = _ayar.ClaudeApiKey;
@@ -223,20 +222,6 @@ public partial class AyarlarPenceresi : Window
         SpotifyDurumGoster();
     }
 
-    private void DuzenListesiDoldur()
-    {
-        DuzenListe.Items.Clear();
-        foreach (var d in _ayar.Duzenler) DuzenListe.Items.Add($"{d.Ad}  ({d.Pencereler.Count} pencere)");
-    }
-
-    /// Kopya listede sil: paylaşılan listeyi değil yeni listeyi yaz, İptal edilirse eskisi kalsın
-    private void DuzenSil_Click(object sender, RoutedEventArgs e)
-    {
-        int i = DuzenListe.SelectedIndex;
-        if (i < 0 || i >= _ayar.Duzenler.Count) return;
-        _ayar.Duzenler = _ayar.Duzenler.Where((_, n) => n != i).ToList();
-        DuzenListesiDoldur();
-    }
 
     private static void SecimAyarla(System.Windows.Controls.ComboBox kutu, string deger)
     {

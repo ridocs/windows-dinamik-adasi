@@ -20,7 +20,7 @@ public partial class MainWindow : Window
     private const double KompaktIkiSatirYukseklik = 54;
     private const double KompaktMedyaGenislik = 224;
     private const double GenisMedyaGenislik = 380, GenisMedyaYukseklik = 142;   // XAML Height ile aynı; söz satırı +24
-    private const double GenisBosGenislik = 380, GenisBosYukseklik = 212;   // XAML Height ile aynı tutulmalı
+    private const double GenisBosGenislik = 380, GenisBosYukseklik = 222;   // XAML Height ile aynı tutulmalı
 
     private Ayarlar _ayar;
 
@@ -1618,17 +1618,6 @@ public partial class MainWindow : Window
             hazneDugme.Click += (_, _) => { _hazneGoster = true; FareBekleBaslat(); Genislet(); };
             KisayolCubugu.Children.Add(hazneDugme);
         }
-
-        // Düzen düğmesi: kayıtlı pencere yerleşimleri menüsü (uygula / şu anki yerleşimi kaydet / sil)
-        var duzenDugme = new Button
-        {
-            Style = (Style)FindResource("KisayolDugme"), Margin = new Thickness(0, 0, 12, 0),
-            ToolTip = _ayar.Duzenler.Count == 0 ? "Çalışma düzenleri: açık pencerelerin yerleşimini kaydet" : $"Çalışma düzenleri ({_ayar.Duzenler.Count})",
-            Content = new TextBlock { Text = "", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 13, Foreground = (Brush)FindResource(_ayar.Duzenler.Count == 0 ? "MetinIkincil" : "Vurgu") },
-        };
-        duzenDugme.Click += (_, _) => DuzenMenusuAc(duzenDugme);
-        KisayolCubugu.Children.Add(duzenDugme);
-
         // Claude'a sor düğmesi (kaynak yoksa gizli)
         if (_ayar.ClaudeAcik && _claude.Hazir)
         {
@@ -1713,72 +1702,6 @@ public partial class MainWindow : Window
         }
 
         Gunluk($"kisayol cubugu: {liste.Count} kisayol, {dugmeler.Count} dugme, olcek {(gerek > kullanilabilir ? "kucultuldu" : "1.0")}");
-    }
-
-    // ---------- Çalışma düzenleri ----------
-
-    private void DuzenMenusuAc(Button kaynak)
-    {
-        var menu = new ContextMenu { PlacementTarget = kaynak, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
-        foreach (var d in _ayar.Duzenler)
-        {
-            var oge = new MenuItem { Header = d.Ad, ToolTip = $"{d.Pencereler.Count} pencere: " + string.Join(", ", d.Pencereler.Select(p => System.IO.Path.GetFileNameWithoutExtension(p.Exe)).Distinct().Take(6)) };
-            var kopya = d;
-            oge.Click += (_, _) => _ = DuzenUygulaAsync(kopya);
-            menu.Items.Add(oge);
-        }
-        if (_ayar.Duzenler.Count > 0) menu.Items.Add(new Separator());
-        var kaydet = new MenuItem { Header = "Şu anki yerleşimi kaydet…" };
-        kaydet.Click += (_, _) => DuzenKaydetDialog();
-        menu.Items.Add(kaydet);
-        if (_ayar.Duzenler.Count > 0)
-        {
-            var sil = new MenuItem { Header = "Sil" };
-            foreach (var d in _ayar.Duzenler)
-            {
-                var alt = new MenuItem { Header = d.Ad }; var kopya = d;
-                alt.Click += (_, _) => { _ayar.Duzenler.Remove(kopya); try { _ayar.Kaydet(); } catch { } _ = KisayollariKurAsync(); };
-                sil.Items.Add(alt);
-            }
-            menu.Items.Add(sil);
-        }
-        menu.IsOpen = true;
-    }
-
-    private void DuzenKaydetDialog()
-    {
-        var pencereler = DuzenServisi.Yakala();
-        if (pencereler.Count == 0) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Kaydedilecek pencere yok", "Önce uygulamaları açıp yerleştirin", Simge: "", SaniyeOverride: 4)); return; }
-        var ekranlar = Forms.Screen.AllScreens;
-        var ekran = ekranlar[Math.Clamp(_ayar.Ekran, 0, ekranlar.Length - 1)];
-        string ozet = $"{pencereler.Count} pencere: " + string.Join(", ", pencereler.Select(p => System.IO.Path.GetFileNameWithoutExtension(p.Exe)).Distinct().Take(8));
-        var sor = new Kontroller.AdSor(ekran, "Düzeni kaydet", ozet, $"Düzen {_ayar.Duzenler.Count + 1}");
-        OdakIzinVer(true);
-        bool? sonuc = sor.ShowDialog();
-        OdakIzinVer(false);
-        if (sonuc != true) return;
-        DuzenKaydet(sor.Ad, pencereler);
-    }
-
-    private void DuzenKaydet(string ad, List<DuzenPencere> pencereler)
-    {
-        _ayar.Duzenler.RemoveAll(d => string.Equals(d.Ad, ad, StringComparison.OrdinalIgnoreCase));
-        _ayar.Duzenler.Add(new DuzenKaydi { Ad = ad, Pencereler = pencereler });
-        try { _ayar.Kaydet(); } catch { }
-        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, $"Düzen kaydedildi: {ad}", $"{pencereler.Count} pencere", Simge: "", SaniyeOverride: 4));
-        Gunluk($"duzen kaydedildi: {ad} -> {pencereler.Count} pencere: {string.Join(" | ", pencereler.Select(p => $"{System.IO.Path.GetFileName(p.Exe)} {p.X},{p.Y} {p.W}x{p.H}{(p.Maksimize ? " max" : "")}"))}");
-        _ = KisayollariKurAsync();
-    }
-
-    private async Task DuzenUygulaAsync(DuzenKaydi d)
-    {
-        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, $"Düzen kuruluyor: {d.Ad}", $"{d.Pencereler.Count} pencere", Simge: "", SaniyeOverride: 20, Anahtar: "duzen", Surecte: true));
-        Daralt();
-        var (ok, yok, baslatilan) = await DuzenServisi.UygulaAsync(d, Gunluk);
-        string metin = baslatilan.Count > 0 ? $"{ok} pencere · başlatıldı: {string.Join(", ", baslatilan)}" : $"{ok} pencere yerleştirildi";
-        if (yok > 0) metin += $" · {yok} bulunamadı";
-        _kuyruk.Ekle(new Duyuru(yok == 0 ? DuyuruTuru.Basari : DuyuruTuru.Uyari, $"Düzen hazır: {d.Ad}", metin, Simge: "", SaniyeOverride: 5, Anahtar: "duzen"));
-        Gunluk($"duzen uygulandi: {d.Ad} ok={ok} yok={yok}");
     }
 
     private void KisayolEkleDialog()
@@ -2465,10 +2388,6 @@ public partial class MainWindow : Window
                     case "sapka": { bool sap = p.Length > 1 && p[1] == "1"; var r = sap ? Color.FromRgb(0xE0, 0x3C, 0x31) : (Color?)null; KompaktCanavar.SapkaAyarla(r, "test"); GenisCanavar.SapkaAyarla(r, "test"); break; }
                     case "soz": Gunluk($"soz durumu: var={_soz.Var} zamanli={_soz.Zamanli} kaynak={_soz.Kaynak} satir='{SozMetin.Text}' gorunur={SozMetin.Visibility} yukseklik={GenisMedya.Height}"); break;
                     case "spotify": _ = SpotifyDurumAsync().ContinueWith(_ => Dispatcher.BeginInvoke(() => Gunluk($"spotify: hazir={_spotify.Hazir} parca={_spotifyParca?.Ad} begenildi={_spotifyBegenildi} hata={_spotify.SonHata}"))); break;
-                    case "duzen-yakala": DuzenKaydet(p.Length > 1 ? string.Join(' ', p.Skip(1)) : "Test", DuzenServisi.Yakala()); break;
-                    case "duzen-uygula": { var ad = string.Join(' ', p.Skip(1)); var d = _ayar.Duzenler.FirstOrDefault(x => x.Ad.Equals(ad, StringComparison.OrdinalIgnoreCase)); if (d != null) _ = DuzenUygulaAsync(d); else Gunluk($"duzen yok: {ad}"); break; }
-                    case "duzen-sil": { var ad = string.Join(' ', p.Skip(1)); _ayar.Duzenler.RemoveAll(x => x.Ad.Equals(ad, StringComparison.OrdinalIgnoreCase)); try { _ayar.Kaydet(); } catch { } _ = KisayollariKurAsync(); break; }
-                    case "duzen-menu": { if (KisayolCubugu.Children.OfType<Button>().FirstOrDefault(b => b.ToolTip is string t && t.StartsWith("Çalışma düzenleri")) is { } db) DuzenMenusuAc(db); break; }
                     case "seek": _ = KonumaAtla(double.Parse(p[1], CultureInfo.InvariantCulture)); break;
                     case "tikla": TestTikla(double.Parse(p[1], CultureInfo.InvariantCulture), double.Parse(p[2], CultureInfo.InvariantCulture)); break;
                     case "pomodoro": _pomodoro.BaslatDuraklat(); break;

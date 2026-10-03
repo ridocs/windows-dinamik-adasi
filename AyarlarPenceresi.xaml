@@ -527,20 +527,6 @@
                             <TextBox x:Name="Kisayollar" Style="{StaticResource CokSatir}" Height="160"/>
                         </StackPanel>
                     </Border>
-                    <Border Style="{StaticResource KartStil}">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource KartBaslik}" Text="Çalışma düzenleri"/>
-                            <TextBlock Style="{StaticResource Aciklama}" Text="Kısayol çubuğundaki düzen düğmesi açık pencerelerin yerlerini bir adla saklar; tıklayınca kapalı uygulamaları başlatıp pencereleri aynı yerlere koyar. Burada yalnız silinir."/>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <ListBox x:Name="DuzenListe" Height="110" Background="#1C1C23" BorderBrush="#2AFFFFFF" BorderThickness="1" Foreground="#F2F2F4"/>
-                                <Button Grid.Column="1" Content="Seçileni sil" VerticalAlignment="Top" Click="DuzenSil_Click"/>
-                            </Grid>
-                        </StackPanel>
-                    </Border>
                 </StackPanel>
 
                 <!-- WHATSAPP -->

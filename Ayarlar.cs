@@ -72,8 +72,6 @@ public sealed class Ayarlar
     public string ClaudeModel { get; set; } = "claude-sonnet-5-5";
     public string ClaudeNot { get; set; } = "";          // sistem notuna eklenir ("cevapları İngilizce ver" gibi)
 
-    // Çalışma düzenleri: kaydedilmiş pencere yerleşimleri (kısayol çubuğundaki düzen düğmesi)
-    public List<Servisler.DuzenKaydi> Duzenler { get; set; } = new();
 
     // Günün özeti: akşam belirlenen saatte kapsülde gösterilir (uygulama süreleri, mesajlar, müzik, toplantı)
     public bool OzetAcik { get; set; } = true;

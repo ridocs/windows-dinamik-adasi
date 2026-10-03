@@ -25,7 +25,6 @@ Kişisel kullanım için geliştirildi, topluluğa açıldı. Türkçe arayüz, 
 - Büyük saat, tarih, CPU / RAM / sunucu (SRV) halkaları, ağ hızı, Tailscale durumu, ses çubuğu.
 - Ses karışımı: uygulama başına ses seviyesi, sessiz ve çıkış aygıtı (örneğin iki monitörün hoparlörleri arasında yönlendirme), Windows'un "Uygulama ses ve cihaz tercihleri" sayfasına gerek kalmadan.
 - Kısayol çubuğu: kurulu uygulamalardan seçilen simgeler, sürükle-bırak ile düzenleme.
-- Çalışma düzenleri: açık pencerelerin yerleşimini kaydet, tek tıkla geri kur (kapalı uygulamalar açılır).
 - Claude'a sor: kapsülün içinde soru, seçili metni özetle / çevir, panoyu özetle. API anahtarı yoksa makinedeki Claude Code CLI kullanılır.
 - Günün özeti: akşam belirlenen saatte uygulama süreleri, mesajlar, müzik ve toplantı süresi.
 
@@ -61,7 +60,7 @@ Ayarlar tepsi simgesinden açılır ve `%AppData%\DinamikAda\ayarlar.json` dosya
 
 ## Test kancası
 
-`DINAMIKADA_GUNLUK=1` ortam değişkeniyle başlatılınca kapsül `%TEMP%\dinamikada-gunluk.txt` dosyasına günlük yazar ve `%TEMP%\dinamikada-komut.txt` dosyasından komut okur: `genislet`, `daralt`, `bos 1`, `mini 1`, `sor <metin>`, `ozet`, `duzen-yakala <ad>`, `tepki`, `sapka 1` gibi. Fare ve klavyeye dokunmadan ekran görüntüsüyle doğrulama için tasarlandı.
+`DINAMIKADA_GUNLUK=1` ortam değişkeniyle başlatılınca kapsül `%TEMP%\dinamikada-gunluk.txt` dosyasına günlük yazar ve `%TEMP%\dinamikada-komut.txt` dosyasından komut okur: `genislet`, `daralt`, `bos 1`, `mini 1`, `sor <metin>`, `ozet`, `tepki`, `sapka 1` gibi. Fare ve klavyeye dokunmadan ekran görüntüsüyle doğrulama için tasarlandı.
 
 ## Mimari (kısaca)
 

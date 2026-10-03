@@ -547,7 +547,7 @@
 
                 <!-- ============ GENİŞ, medya yok ============ -->
                 <Grid x:Name="GenisBos" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
-                      Width="380" Height="212" VerticalAlignment="Top" HorizontalAlignment="Left">
+                      Width="380" Height="222" VerticalAlignment="Top" HorizontalAlignment="Left">
                     <Grid Margin="20,14,20,14">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -657,7 +657,7 @@
                                         ToolTip="Ses karışımı: uygulama başına ses ve çıkış aygıtı" Click="KarisimAc_Click"/>
                             </Grid>
                             <!-- Kısayol çubuğu: uygulama simgeleri, kodda doldurulur -->
-                            <WrapPanel x:Name="KisayolCubugu" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                            <WrapPanel x:Name="KisayolCubugu" Margin="0,12,0,6" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <k:PomodoroSatiri x:Name="BosPomodoro" Grid.Row="3" Visibility="Collapsed"/>
                     </Grid>
