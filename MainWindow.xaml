@@ -532,6 +532,7 @@
                         <Grid x:Name="SoruAltSatir" Margin="0,8,0,0" Visibility="Collapsed">
                             <TextBlock x:Name="SoruDurum" FontSize="10" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text="" Margin="0,0,190,0" TextTrimming="CharacterEllipsis"/>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Style="{StaticResource AltDugme}" Tag="&#xE74E;" Content="Kaydet" Click="SoruKaydet_Click" ToolTip="Masaüstüne .md ve yazdırılabilir .html"/>
                                 <Button Style="{StaticResource AltDugme}" Tag="&#xE8C8;" Content="Kopyala" Click="SoruKopyala_Click"/>
                                 <Button Style="{StaticResource AltDugme}" Tag="&#xE72C;" Content="Yeni sohbet" Click="SoruSifirla_Click" ToolTip="Önceki soruları unutur"/>
                             </StackPanel>

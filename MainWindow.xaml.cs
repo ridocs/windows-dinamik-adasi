@@ -788,6 +788,107 @@ public partial class MainWindow : Window
         if (_genis) Genislet();
     }
 
+    private string _sonSoru = "";
+
+    /// Claude yanıtını masaüstüne profesyonel .md ve yazdırılabilir .html olarak kaydeder
+    private void SoruKaydet_Click(object sender, RoutedEventArgs e)
+    {
+        string icerik = SoruCevap.Text.Trim();
+        if (icerik.Length == 0 || icerik == "Claude düşünüyor…") return;
+        string baslik = SoruBaslik.Text == "Günün özeti" ? "Günün Özeti" : (_sonSoru.Length > 0 ? KisaBaslik(_sonSoru) : "Claude Yanıtı");
+        var now = DateTime.Now;
+        string damga = now.ToString("yyyy-MM-dd HH-mm");
+        string masaustu = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        string taban = DosyaAdiTemizle($"{baslik} - {damga}");
+        string mdYol = System.IO.Path.Combine(masaustu, taban + ".md");
+        string htmlYol = System.IO.Path.Combine(masaustu, taban + ".html");
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"# {baslik}").AppendLine();
+            sb.AppendLine($"{now:d MMMM yyyy, HH:mm} · Dinamik Ada · Claude").AppendLine();
+            if (_sonSoru.Length > 0 && SoruBaslik.Text != "Günün özeti") sb.AppendLine($"> **Soru:** {_sonSoru}").AppendLine();
+            sb.AppendLine("---").AppendLine();
+            sb.AppendLine(icerik).AppendLine().AppendLine("---");
+            sb.AppendLine("<sub>Dinamik Ada ile oluşturuldu.</sub>");
+            System.IO.File.WriteAllText(mdYol, sb.ToString(), System.Text.Encoding.UTF8);
+            System.IO.File.WriteAllText(htmlYol, RaporHtml(baslik, now, SoruBaslik.Text == "Günün özeti" ? "" : _sonSoru, icerik), System.Text.Encoding.UTF8);
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Masaüstüne kaydedildi", taban + ".md · .html (yazdır → PDF)", Simge: "", SaniyeOverride: 6));
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"/select,\"{mdYol}\"")); } catch { }
+            Gunluk($"claude kaydet: {mdYol}");
+        }
+        catch (Exception ex) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "Kaydedilemedi", ex.Message, Simge: "", SaniyeOverride: 5)); }
+    }
+
+    private static string KisaBaslik(string s)
+    {
+        s = s.Split('\n')[0].Trim();
+        if (s.Length > 48) s = s[..48].TrimEnd() + "…";
+        return s.Length == 0 ? "Claude Yanıtı" : s;
+    }
+
+    private static string DosyaAdiTemizle(string s)
+    {
+        foreach (var c in System.IO.Path.GetInvalidFileNameChars()) s = s.Replace(c, ' ');
+        s = System.Text.RegularExpressions.Regex.Replace(s, @"\s+", " ").Trim();
+        return s.Length > 90 ? s[..90].Trim() : s;
+    }
+
+    /// Basit Markdown → profesyonel, yazdırmaya uygun HTML (açık tema, A4)
+    private static string RaporHtml(string baslik, DateTime zaman, string soru, string md)
+    {
+        var g = new System.Text.StringBuilder();
+        bool liste = false;
+        foreach (var hamSatir in md.Replace("\r", "").Split('\n'))
+        {
+            string satir = HtmlKac(hamSatir.TrimEnd());
+            satir = System.Text.RegularExpressions.Regex.Replace(satir, @"\*\*(.+?)\*\*", "<strong>$1</strong>");
+            satir = System.Text.RegularExpressions.Regex.Replace(satir, @"(?<!\*)\*(?!\*)(.+?)\*(?!\*)", "<em>$1</em>");
+            string t = satir.TrimStart();
+            if (t.StartsWith("- ") || t.StartsWith("• ") || System.Text.RegularExpressions.Regex.IsMatch(t, @"^\d+[.)]\s"))
+            {
+                if (!liste) { g.Append("<ul>"); liste = true; }
+                g.Append("<li>").Append(System.Text.RegularExpressions.Regex.Replace(t, @"^(-|•|\d+[.)])\s+", "")).Append("</li>");
+                continue;
+            }
+            if (liste) { g.Append("</ul>"); liste = false; }
+            if (t.Length == 0) continue;
+            if (t.StartsWith("### ")) g.Append("<h3>").Append(t[4..]).Append("</h3>");
+            else if (t.StartsWith("## ")) g.Append("<h2>").Append(t[3..]).Append("</h2>");
+            else if (t.StartsWith("# ")) { /* başlık üstte var */ }
+            else if (t == "---") g.Append("<hr>");
+            else g.Append("<p>").Append(satir).Append("</p>");
+        }
+        if (liste) g.Append("</ul>");
+        string soruBlok = soru.Length > 0 ? $"<div class='soru'><span>Soru</span>{HtmlKac(soru)}</div>" : "";
+        return $@"<!doctype html><html lang='tr'><head><meta charset='utf-8'><title>{HtmlKac(baslik)}</title>
+<style>
+@page {{ size: A4; margin: 2cm; }}
+* {{ box-sizing: border-box; }}
+body {{ font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a22; line-height: 1.65; max-width: 760px; margin: 40px auto; padding: 0 24px; }}
+.ust {{ border-bottom: 3px solid #D97757; padding-bottom: 16px; margin-bottom: 28px; }}
+h1 {{ font-size: 26px; margin: 0 0 6px; color: #15151b; }}
+.meta {{ color: #8a8a93; font-size: 13px; }}
+.soru {{ background: #faf3f0; border-left: 3px solid #D97757; padding: 12px 16px; border-radius: 6px; margin: 0 0 22px; font-size: 14px; }}
+.soru span {{ display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #D97757; font-weight: 600; margin-bottom: 4px; }}
+h2 {{ font-size: 19px; margin: 26px 0 10px; color: #15151b; }}
+h3 {{ font-size: 15px; margin: 20px 0 8px; color: #333; }}
+p {{ margin: 0 0 12px; }}
+ul {{ margin: 0 0 14px; padding-left: 22px; }}
+li {{ margin: 0 0 6px; }}
+hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
+.alt {{ margin-top: 36px; padding-top: 14px; border-top: 1px solid #e5e5ea; color: #a0a0a8; font-size: 12px; }}
+.alt b {{ color: #D97757; }}
+</style></head><body>
+<div class='ust'><h1>{HtmlKac(baslik)}</h1><div class='meta'>{zaman:d MMMM yyyy, HH:mm} · Dinamik Ada</div></div>
+{soruBlok}
+{g}
+<div class='alt'><b>Dinamik Ada</b> ile oluşturuldu · yazdırmak için Ctrl+P, hedef olarak PDF seçin</div>
+</body></html>";
+    }
+
+    private static string HtmlKac(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
+
     private void SoruKopyala_Click(object sender, RoutedEventArgs e)
     {
         try { Clipboard.SetText(SoruCevap.Text); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Yanıt kopyalandı", "", Simge: "", SaniyeOverride: 2)); } catch { }
@@ -806,6 +907,7 @@ public partial class MainWindow : Window
     {
         if (_soruBekliyor) return;
         _soruBekliyor = true; _soruSonKullanim = DateTime.Now;
+        _sonSoru = gosterilenSoru ?? soru;
         SoruIpucu.Text = gosterilenSoru ?? (soru.Length > 60 ? soru[..60] + "…" : soru);
         SoruCevap.Text = "Claude düşünüyor…";
         SoruDurum.Text = _claude.Kaynak;
@@ -2554,6 +2656,7 @@ public partial class MainWindow : Window
                     case "mini": _testMini = p.Length > 1 && p[1] == "1"; if (!_genis) Daralt(); break;
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
+                    case "sor-kaydet": SoruKaydet_Click(this, new RoutedEventArgs()); break;
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
                     case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }
                     case "menu-kapat": if (_sonMenu != null) _sonMenu.IsOpen = false; break;
