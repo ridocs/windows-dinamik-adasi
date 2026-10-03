@@ -27,7 +27,6 @@ public partial class HaznePaneli : UserControl
     public event Action? PanoIstendi;
     public event Action? GeriIstendi;                   // saat / kısayol paneline dön
     public event Action? TelefonaIstendi;               // hepsini WhatsApp ile kendine gönder
-    public event Action? EpostaIstendi;                 // hepsini e-posta eki olarak aç
     public event Action? ClaudeIstendi;                 // metin dosyalarını Claude'a özetlet
     public event Action? Degisti;                       // içerik değişti: üst pencere boyutu yenilesin
 
@@ -57,7 +56,7 @@ public partial class HaznePaneli : UserControl
         int n = _depo?.Ogeler.Count ?? 0;
         Sayac.Text = n == 0 ? "" : $"· {n} öğe";
         Bos.Visibility = n == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var b in new[] { ZipDugme, LinkDugme, YukleDugme, TemizleDugme, TelefonDugme, EpostaDugme }) b.IsEnabled = n > 0;
+        foreach (var b in new[] { ZipDugme, LinkDugme, YukleDugme, TemizleDugme, TelefonDugme }) b.IsEnabled = n > 0;
 
         if (_gorunum == "izgara")
         {
@@ -93,7 +92,6 @@ public partial class HaznePaneli : UserControl
     private void Pano_Click(object sender, RoutedEventArgs e) => PanoIstendi?.Invoke();
     private void Geri_Click(object sender, RoutedEventArgs e) => GeriIstendi?.Invoke();
     private void Telefon_Click(object sender, RoutedEventArgs e) => TelefonaIstendi?.Invoke();
-    private void Eposta_Click(object sender, RoutedEventArgs e) => EpostaIstendi?.Invoke();
     private void Claude_Click(object sender, RoutedEventArgs e) => ClaudeIstendi?.Invoke();
     private void Temizle_Click(object sender, RoutedEventArgs e) => _depo?.Temizle();
 

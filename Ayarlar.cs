@@ -60,6 +60,11 @@ public sealed class Ayarlar
     // Ağ: boş panelde indirme/yükleme hızı ve Tailscale durumu; bağlantı değişince duyuru
     public bool AgAcik { get; set; } = true;
 
+    // İndirilenler klasörüne düşen dosya hazneye alınır ve duyurulur
+    public bool IndirmeIzleAcik { get; set; } = true;
+    // WhatsApp'ta kendine ("Siz") attığın dosya ve bağlantılar hazneye düşer
+    public bool TelefondanHazneyeAcik { get; set; } = true;
+
     // Müzik: şarkı sözleri (lrclib.net, hesapsız) ve Spotify (beğen, sıradakiler; PKCE girişi)
     public bool SozlerAcik { get; set; } = true;
     public string SpotifyClientId { get; set; } = "";

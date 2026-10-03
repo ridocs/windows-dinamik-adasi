@@ -18,7 +18,9 @@ Kişisel kullanım için geliştirildi, topluluğa açıldı. Türkçe arayüz, 
 - Toplantı modu: mikrofon açılınca bildirimler bastırılır, bitince özet.
 
 **Dosya haznesi**
-- Kapsüle sürüklenen ya da Ctrl+V ile yapıştırılan dosyalar hazneye alınır (liste / ızgara). Sunucuya yükleme (scp), paylaşım linki, zip, e-posta eki, WhatsApp ile telefona gönderme, dışarı sürükleme (taşı / kopyala / kısayol).
+- Kapsüle sürüklenen ya da Ctrl+V ile yapıştırılan dosyalar hazneye alınır (liste / ızgara). Sunucuya yükleme (scp), paylaşım linki, zip, WhatsApp ile telefona gönderme, dışarı sürükleme (taşı / kopyala / kısayol).
+- Telefondan bilgisayara: WhatsApp'ta kendinize ("Siz") attığınız dosya ve bağlantılar kendiliğinden hazneye düşer.
+- İndirme izleme: İndirilenler klasörüne biten her indirme kapsülde duyurulur ve hazneye alınır; oradan sürükleyip taşıyabilirsiniz.
 - Haznedeki metin dosyalarını Claude'a özetletme.
 
 **Boş panel**

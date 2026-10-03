@@ -10,7 +10,8 @@ namespace DinamikAda.Servisler;
 /// wa-servis (Node, whatsapp-web.js) köprüsü: süreci başlatır, yerel API ile konuşur.
 public sealed class WaServisi : IDisposable
 {
-    public sealed record Durum(bool hazir, bool qrVar, string ben, int bekleyen);
+    public sealed record Durum(bool hazir, bool qrVar, string ben, int bekleyen, int telefondan = 0);
+    public sealed record Telefondan(string tur, string yol, string ad, string url, string metin, long zaman);
     public sealed record Gelen(string id, string numara, string ad, string grup, string metin, long zaman, string jid = "");
 
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(8) };
@@ -97,6 +98,12 @@ public sealed class WaServisi : IDisposable
             return bmp;
         }
         catch { return null; }
+    }
+
+    public async Task<List<Telefondan>> TelefondanAsync()
+    {
+        try { return await Http.GetFromJsonAsync<List<Telefondan>>(Url("/telefondan")) ?? new(); }
+        catch { return new(); }
     }
 
     public async Task<List<Gelen>> GelenAsync()

@@ -348,6 +348,8 @@
                                 <CheckBox x:Name="HavaAcik" Content="Hava durumu"/>
                                 <CheckBox x:Name="ToplantiModuAcik" Content="Toplantı modu (mikrofon açıkken sessiz)"/>
                                 <CheckBox x:Name="AgAcik" Content="Ağ hızı ve Tailscale (boş panel)"/>
+                                <CheckBox x:Name="IndirmeIzleAcik" Content="İndirilenleri izle: biten indirme hazneye"/>
+                                <CheckBox x:Name="TelefondanHazneyeAcik" Content="Telefondan: WhatsApp'ta kendine attıkların hazneye"/>
                             </UniformGrid>
                         </StackPanel>
                     </Border>

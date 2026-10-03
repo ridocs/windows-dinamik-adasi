@@ -11,11 +11,12 @@
 const http = require("http");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const QRCode = require("qrcode");
 const pino = require("pino");
 const baileys = require("@whiskeysockets/baileys");
 const makeWASocket = baileys.default || baileys.makeWASocket;
-const { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers } = baileys;
+const { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion, Browsers, downloadMediaMessage } = baileys;
 
 const PORT = Number(process.env.WA_PORT || 5461);
 const OTURUM = path.join(__dirname, "oturum-baileys");
@@ -132,7 +133,8 @@ async function baslat(neden) {
       if (type !== "notify") return;
       for (const m of messages) {
         try {
-          if (!m.message || m.key.fromMe) continue;
+          if (!m.message) continue;
+          if (m.key.fromMe) { kendineIsle(m); continue; }
           const jid = m.key.remoteJid || "";
           if (jid === "status@broadcast" || jid.endsWith("@newsletter")) continue;
           if (arsiv.has(jid)) continue;   // arşivlenmiş sohbet: sessiz
@@ -181,6 +183,51 @@ function sohbetAl(c) {
   } catch {}
 }
 
+// ---- Telefondan bilgisayara: kendine ("Siz") attığın dosya ve bağlantılar ----
+const gonderilen = new Set();          // köprünün kendi gönderdiği mesaj kimlikleri (döngü olmasın)
+const telefondanKuyruk = [];
+const GELEN_KLASOR = path.join(process.env.APPDATA || os.homedir(), "DinamikAda", "gelen");
+function kendiSohbetiMi(jid) {
+  if (!jid) return false;
+  if (jid === `${ben}@s.whatsapp.net`) return true;
+  try { const me = sock?.user; if (me?.lid && jid === `${jidNumara(me.lid)}@lid`) return true; } catch {}
+  return false;
+}
+function uzantiBul(mime, varsayilan) {
+  const m = String(mime || "").split(";")[0].trim();
+  const tablo = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif", "video/mp4": ".mp4", "audio/ogg": ".ogg", "audio/mpeg": ".mp3", "audio/mp4": ".m4a", "application/pdf": ".pdf" };
+  return tablo[m] || varsayilan;
+}
+function guvenliAd(ad) { return String(ad || "").replace(/[\\/:*?"<>|]+/g, "_").trim().slice(0, 120) || "dosya"; }
+async function kendineIsle(m) {
+  try {
+    const id = m.key?.id || "";
+    if (!id || gonderilen.has(id)) return;                        // köprü gönderdi, tekrar alma
+    if (!kendiSohbetiMi(m.key.remoteJid)) return;                 // başka sohbete attığın şey değil, yalnız "Siz"
+    const ts = Number(m.messageTimestamp || 0);
+    if (ts && Date.now() / 1000 - ts > 120) return;               // geçmiş eşlemesi artığı
+    const x = m.message || {};
+    const metin = x.conversation || x.extendedTextMessage?.text || x.imageMessage?.caption || x.videoMessage?.caption || x.documentMessage?.caption || "";
+    const medya = x.imageMessage ? "image" : x.videoMessage ? "video" : x.documentMessage ? "document" : x.audioMessage ? "audio" : null;
+    if (medya) {
+      fs.mkdirSync(GELEN_KLASOR, { recursive: true });
+      const buf = await downloadMediaMessage(m, "buffer", {}, { logger: pino({ level: "silent" }), reuploadRequest: sock.updateMediaMessage });
+      const mm = x.imageMessage || x.videoMessage || x.documentMessage || x.audioMessage;
+      const zaman = new Date((ts || Date.now() / 1000) * 1000);
+      const damga = zaman.toISOString().slice(0, 19).replace(/[-:T]/g, "").replace(/^(\d{8})(\d{6})$/, "$1-$2");
+      let ad = medya === "document" && mm.fileName ? guvenliAd(mm.fileName) : `WhatsApp-${damga}${uzantiBul(mm.mimetype, medya === "image" ? ".jpg" : medya === "video" ? ".mp4" : medya === "audio" ? ".ogg" : ".bin")}`;
+      let yol = path.join(GELEN_KLASOR, ad);
+      for (let i = 2; fs.existsSync(yol); i++) { const e = path.extname(ad); yol = path.join(GELEN_KLASOR, `${path.basename(ad, e)} (${i})${e}`); }
+      fs.writeFileSync(yol, buf);
+      telefondanKuyruk.push({ tur: "dosya", yol, ad: path.basename(yol), url: "", metin, zaman: zaman.getTime() });
+      log("telefondan dosya:", path.basename(yol));
+    }
+    const linkler = String(metin).match(/https?:\/\/[^\s<>"')\]]+/g) || [];
+    for (const url of linkler) { telefondanKuyruk.push({ tur: "link", yol: "", ad: "", url, metin, zaman: (ts || Math.floor(Date.now() / 1000)) * 1000 }); log("telefondan link:", url); }
+    while (telefondanKuyruk.length > 50) telefondanKuyruk.shift();
+  } catch (e) { log("kendine mesaj işlenemedi:", e.message); }
+}
+
 const grupAdlari = new Map();
 function grupAdi(jid) {
   if (grupAdlari.has(jid)) return grupAdlari.get(jid);
@@ -220,13 +267,14 @@ function hedefJid(numara, ad, jid) {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://127.0.0.1:${PORT}`);
-    if (req.method === "GET" && url.pathname === "/durum") return json(res, 200, { hazir, qrVar: !!sonQr, ben, bekleyen: gelenKuyruk.length, durum, kisi: kisiler.size, arsiv: arsiv.size });
+    if (req.method === "GET" && url.pathname === "/durum") return json(res, 200, { hazir, qrVar: !!sonQr, ben, bekleyen: gelenKuyruk.length, durum, kisi: kisiler.size, arsiv: arsiv.size, telefondan: telefondanKuyruk.length });
     if (req.method === "GET" && url.pathname === "/qr") {
       if (!sonQr) return json(res, 404, { hata: "QR yok" });
       const png = await QRCode.toBuffer(sonQr, { width: 320, margin: 1 });
       res.writeHead(200, { "Content-Type": "image/png" }); return res.end(png);
     }
     if (req.method === "GET" && url.pathname === "/gelen") return json(res, 200, gelenKuyruk.splice(0, gelenKuyruk.length));
+    if (req.method === "GET" && url.pathname === "/telefondan") return json(res, 200, telefondanKuyruk.splice(0, telefondanKuyruk.length));
     if (req.method === "GET" && url.pathname === "/kisi") {
       const numara = kisiBul(url.searchParams.get("ad") || "");
       return json(res, numara ? 200 : 404, { numara });
@@ -237,7 +285,7 @@ const server = http.createServer(async (req, res) => {
       if (!metin) return json(res, 400, { hata: "metin boş" });
       const jid = hedefJid(numara, ad, istenenJid);
       if (!jid) return json(res, 404, { hata: "kişi bulunamadı" });
-      await sock.sendMessage(jid, { text: metin });
+      const g1 = await sock.sendMessage(jid, { text: metin }); if (g1 && g1.key && g1.key.id) gonderilen.add(g1.key.id);
       log("gönderildi ->", jidNumara(jid));
       return json(res, 200, { ok: true, kime: jidNumara(jid) });
     }
@@ -253,7 +301,7 @@ const server = http.createServer(async (req, res) => {
       const icerik = resim
         ? { image: fs.readFileSync(yol), caption: metin || "" }
         : { document: fs.readFileSync(yol), fileName: adDosya, mimetype: "application/octet-stream", caption: metin || "" };
-      await sock.sendMessage(jid, icerik);
+      const g2 = await sock.sendMessage(jid, icerik); if (g2 && g2.key && g2.key.id) gonderilen.add(g2.key.id);
       log("dosya gönderildi ->", jidNumara(jid), adDosya);
       return json(res, 200, { ok: true, kime: jidNumara(jid) });
     }

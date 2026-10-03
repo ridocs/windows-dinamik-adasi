@@ -176,8 +176,9 @@ public partial class MainWindow : Window
         HaznePanel.PanoIstendi += HaznePano;
         HaznePanel.GeriIstendi += () => { _hazneGoster = false; _hazneSonEkleme = DateTime.MinValue; Genislet(); };
         HaznePanel.TelefonaIstendi += () => _ = HazneTelefonaAsync();
-        HaznePanel.EpostaIstendi += HazneEposta;
         _ozet.Yukle();
+        _indirme.Indirildi += yol => Dispatcher.BeginInvoke(() => IndirmeTamamlandi(yol));
+        if (_ayar.IndirmeIzleAcik && _indirme.Baslat()) Gunluk("indirme izleniyor: " + _indirme.Klasor);
         KarisimListe.ItemsSource = _karisimListe;
         _karisimZaman.Tick += (_, _) => { if (_karisimGoster && GenisKarisim.Visibility == Visibility.Visible) KarisimYenile(yenidenBoyutla: true); else _karisimZaman.Stop(); };
         _fareBekleZaman.Tick += (_, _) => { _fareBekleZaman.Stop(); if (!Ada.IsMouseOver && _genis) { _daraltGecikme.Stop(); _daraltGecikme.Start(); } };
@@ -397,6 +398,52 @@ public partial class MainWindow : Window
         bool sozGoster = _ayar.SozlerAcik && SozMetin.Visibility == Visibility.Visible && _sonSozSatiri.Length > 0 && _sonSozSatiri != "♪";
         string hedef = sozGoster ? _sonSozSatiri : _durum.Baslik;
         if (KompaktBaslik.Text != hedef) KompaktBaslik.Text = hedef;
+    }
+
+    // ---------- Telefondan bilgisayara ve indirme izleme ----------
+
+    private readonly IndirmeIzleyici _indirme = new();
+
+    /// Kendi WhatsApp sohbetine ("Siz") attığın dosya ve bağlantılar: hazneye düşer
+    private void TelefondanIsle(WaServisi.Telefondan t)
+    {
+        if (!_ayar.TelefondanHazneyeAcik) return;
+        string? yol = null; string ad;
+        if (t.tur == "dosya") { yol = t.yol; ad = t.ad; }
+        else
+        {
+            // Bağlantı: internet kısayolu dosyası (.url), çift tıklayınca tarayıcıda açılır
+            try
+            {
+                string klasor = System.IO.Path.Combine(Ayarlar.Klasor, "gelen");
+                System.IO.Directory.CreateDirectory(klasor);
+                var uri = new Uri(t.url);
+                string temel = (uri.Host.Replace("www.", "") + (uri.AbsolutePath.Length > 1 ? " " + uri.AbsolutePath.Trim('/').Replace('/', ' ') : "")).Trim();
+                foreach (var c in System.IO.Path.GetInvalidFileNameChars()) temel = temel.Replace(c, '_');
+                if (temel.Length > 60) temel = temel[..60];
+                yol = System.IO.Path.Combine(klasor, temel + ".url");
+                for (int i = 2; System.IO.File.Exists(yol); i++) yol = System.IO.Path.Combine(klasor, $"{temel} ({i}).url");
+                System.IO.File.WriteAllText(yol, "[InternetShortcut]\r\nURL=" + t.url + "\r\n");
+                ad = temel;
+            }
+            catch (Exception e) { Gunluk("telefondan link yazilamadi: " + e.Message); return; }
+        }
+        if (yol == null || _hazne.Ekle(yol) == null) return;
+        _hazneSonEkleme = DateTime.Now;
+        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, t.tur == "dosya" ? "Telefondan dosya geldi" : "Telefondan bağlantı geldi", ad, Simge: "", SaniyeOverride: 5));
+        Gunluk($"telefondan: {t.tur} {ad}");
+    }
+
+    /// İndirilenler klasörüne düşen dosya: hazneye al ve duyur
+    private void IndirmeTamamlandi(string yol)
+    {
+        if (!_ayar.IndirmeIzleAcik) return;
+        if (_hazne.Ekle(yol) == null) return;
+        _hazneSonEkleme = DateTime.Now;
+        long boyut = 0; try { boyut = new System.IO.FileInfo(yol).Length; } catch { }
+        string boyutMetin = boyut >= 1 << 20 ? $"{boyut / 1048576.0:0.0} MB" : $"{Math.Max(1, boyut / 1024)} KB";
+        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "İndirme tamamlandı", $"{System.IO.Path.GetFileName(yol)} · {boyutMetin} · haznede", Simge: "", SaniyeOverride: 5));
+        Gunluk($"indirme: {yol} {boyut}");
     }
 
     // ---------- Ses karışımı ----------
@@ -1365,6 +1412,8 @@ public partial class MainWindow : Window
             }
             if (d.bekleyen > 0)
                 foreach (var g in await _wa.GelenAsync()) WaGelenIsle(g);
+            if (d.telefondan > 0)
+                foreach (var t in await _wa.TelefondanAsync()) TelefondanIsle(t);
         }
     }
 
@@ -1822,25 +1871,6 @@ public partial class MainWindow : Window
         }
         _kuyruk.Ekle(new Duyuru(hata == 0 ? DuyuruTuru.Basari : DuyuruTuru.Uyari, "Telefona gönderme",
             hata == 0 ? $"{ok} dosya WhatsApp'ta 'Siz' sohbetinde" : $"{ok} gönderildi, {hata} hatalı", Simge: "", SaniyeOverride: 6));
-    }
-
-    /// Varsayılan posta uygulamasında ekli yeni ileti; MAPI yoksa dosyalar panoya, mailto açılır
-    private void HazneEposta()
-    {
-        var dosyalar = _hazne.Ogeler.Where(o => !o.Klasor).Select(o => o.Yol).ToArray();
-        if (dosyalar.Length == 0) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Eklenecek dosya yok", "Klasörler için önce Zip", Simge: "", SaniyeOverride: 4)); return; }
-        OdakIzinVer(true);
-        int sonuc = Posta.EkliIletiAc(dosyalar, "", "");
-        OdakIzinVer(false);
-        if (sonuc == 0 || sonuc == 1) return;   // açıldı ya da kullanıcı vazgeçti
-        try
-        {
-            var liste = new System.Collections.Specialized.StringCollection(); liste.AddRange(dosyalar);
-            Clipboard.SetFileDropList(liste);
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("mailto:") { UseShellExecute = true });
-            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Posta açıldı, dosyalar panoda", "İletide Ctrl+V ile ekleyin (MAPI desteği yok)", Simge: "", SaniyeOverride: 7));
-        }
-        catch (Exception ex) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "Posta açılamadı", ex.Message, Simge: "", SaniyeOverride: 5)); }
     }
 
     private void HazneZip()
