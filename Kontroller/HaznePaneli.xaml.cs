@@ -26,6 +26,7 @@ public partial class HaznePaneli : UserControl
     public event Action? ZipIstendi;
     public event Action? PanoIstendi;
     public event Action? GeriIstendi;                   // saat / kısayol paneline dön
+    public event Action<string>? GorunumDegisti;
     public event Action? TelefonaIstendi;               // hepsini WhatsApp ile kendine gönder
     public event Action? ClaudeIstendi;                 // metin dosyalarını Claude'a özetlet
     public event Action? Degisti;                       // içerik değişti: üst pencere boyutu yenilesin
@@ -54,9 +55,10 @@ public partial class HaznePaneli : UserControl
     private void Yenile()
     {
         int n = _depo?.Ogeler.Count ?? 0;
-        Sayac.Text = n == 0 ? "" : $"· {n} öğe";
+        Sayac.Text = n.ToString();
         Bos.Visibility = n == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var b in new[] { ZipDugme, LinkDugme, YukleDugme, TemizleDugme, TelefonDugme }) b.IsEnabled = n > 0;
+        foreach (var b in new[] { ZipDugme, LinkDugme, YukleDugme, TemizleDugme, TelefonDugme, ClaudeDugme }) b.IsEnabled = n > 0;
+        GorunumDugme.Content = ((char)(_gorunum == "izgara" ? 0xE8FD : 0xF0E2)).ToString();
 
         if (_gorunum == "izgara")
         {
@@ -91,6 +93,7 @@ public partial class HaznePaneli : UserControl
     private void Zip_Click(object sender, RoutedEventArgs e) => ZipIstendi?.Invoke();
     private void Pano_Click(object sender, RoutedEventArgs e) => PanoIstendi?.Invoke();
     private void Geri_Click(object sender, RoutedEventArgs e) => GeriIstendi?.Invoke();
+    private void Gorunum_Click(object sender, RoutedEventArgs e) { GorunumAyarla(_gorunum == "izgara" ? "liste" : "izgara"); GorunumDegisti?.Invoke(_gorunum); }
     private void Telefon_Click(object sender, RoutedEventArgs e) => TelefonaIstendi?.Invoke();
     private void Claude_Click(object sender, RoutedEventArgs e) => ClaudeIstendi?.Invoke();
     private void Temizle_Click(object sender, RoutedEventArgs e) => _depo?.Temizle();

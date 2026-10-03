@@ -204,6 +204,7 @@ public partial class MainWindow : Window
         _fareBekleZaman.Tick += (_, _) => { _fareBekleZaman.Stop(); if (!Ada.IsMouseOver && _genis) { _daraltGecikme.Stop(); _daraltGecikme.Start(); } };
         KompaktCanavar.MouseLeftButtonDown += (_, e) => { KompaktCanavar.Tepki(); e.Handled = true; };
         GenisCanavar.MouseLeftButtonDown += (_, e) => { GenisCanavar.Tepki(); e.Handled = true; };
+        HaznePanel.GorunumDegisti += g => { _ayar.HazneGorunum = g; try { _ayar.Kaydet(); } catch { } };
         HaznePanel.ClaudeIstendi += () =>
         {
             string metin = ClaudeServisi.DosyaMetni(_hazne.Ogeler.Select(o => o.Yol));
