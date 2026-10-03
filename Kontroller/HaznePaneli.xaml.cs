@@ -58,18 +58,25 @@ public partial class HaznePaneli : UserControl
         int n = _depo?.Ogeler.Count ?? 0;
         Sayac.Text = n.ToString();
         Bos.Visibility = n == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (var b in new[] { ZipDugme, LinkDugme, YukleDugme, TemizleDugme, TelefonDugme, ClaudeDugme }) b.IsEnabled = n > 0;
+        foreach (var b in new[] { ZipDugme, LinkDugme, YukleDugme, TemizleDugme, TelefonDugme, ClaudeDugme, ZipYan, LinkYan, YukleYan, TemizleYan, TelefonYan, ClaudeYan }) b.IsEnabled = n > 0;
         GorunumDugme.Content = ((char)(_gorunum == "izgara" ? 0xE8FD : 0xF0E2)).ToString();
 
         if (_gorunum == "izgara")
         {
+            YanCubuk.Visibility = Visibility.Collapsed;
+            YanSutun.Width = new GridLength(0);
+            AltAyrac.Visibility = AltCubuk.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
             int sutun = Math.Clamp(n, EnAzSutun, EnCokSutun);
             Width = sutun * KutuGenislik - 8 + YanBosluk;
+            AltCubuk.Columns = Width >= 500 ? 3 : 2;   // geniş: 3-3, dar: 2-2-2
             Kaydirici.MaxHeight = GorunurSatir * KutuYukseklik;
         }
         else
         {
-            Width = 380;
+            YanCubuk.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
+            YanSutun.Width = GridLength.Auto;
+            AltAyrac.Visibility = AltCubuk.Visibility = Visibility.Collapsed;
+            Width = 440;
             Kaydirici.MaxHeight = GorunurSatir * ListeSatir + 8;
         }
 
