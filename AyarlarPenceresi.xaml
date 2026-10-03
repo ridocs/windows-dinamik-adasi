@@ -1,0 +1,664 @@
+<Window x:Class="DinamikAda.AyarlarPenceresi"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dinamik Ada ayarları"
+        Width="800" Height="620" MinWidth="720" MinHeight="500" ResizeMode="CanResize"
+        WindowStartupLocation="Manual" ShowActivated="True" Background="#0E0E12"
+        Foreground="#F2F2F4" FontFamily="Segoe UI" FontSize="12.5"
+        UseLayoutRounding="True" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Display">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="Vurgu" Color="#D97757"/>
+        <SolidColorBrush x:Key="VurguSoluk" Color="#26D97757"/>
+        <SolidColorBrush x:Key="Kart" Color="#15151B"/>
+        <SolidColorBrush x:Key="KartKenar" Color="#1FFFFFFF"/>
+        <SolidColorBrush x:Key="Giris" Color="#1C1C23"/>
+        <SolidColorBrush x:Key="Ikincil" Color="#8E8E96"/>
+
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#F2F2F4"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <!-- satır etiketi (sol sütun) -->
+        <Style x:Key="Etiket" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#C9C9D1"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,12,0"/>
+        </Style>
+        <!-- kart başlığı ve alt açıklaması -->
+        <Style x:Key="KartBaslik" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style x:Key="Aciklama" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="Foreground" Value="{StaticResource Ikincil}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineHeight" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style x:Key="Dipnot" TargetType="TextBlock" BasedOn="{StaticResource Aciklama}">
+            <Setter Property="Margin" Value="0,10,0,0"/>
+        </Style>
+        <Style x:Key="KartStil" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource Kart}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource KartKenar}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="18,14,18,16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <!-- satır ızgarası: etiket | kontrol | değer -->
+        <Style x:Key="Satirlar" TargetType="Grid">
+            <Setter Property="Margin" Value="0,2,0,0"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#F2F2F4"/>
+            <Setter Property="Margin" Value="0,5"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style TargetType="Slider">
+            <Setter Property="Margin" Value="0,6"/>
+            <Setter Property="IsSnapToTickEnabled" Value="True"/>
+            <Setter Property="Foreground" Value="{StaticResource Vurgu}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource Giris}"/>
+            <Setter Property="Foreground" Value="#F2F2F4"/>
+            <Setter Property="BorderBrush" Value="#2AFFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="0,3"/>
+            <Setter Property="CaretBrush" Value="#F2F2F4"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource Vurgu}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border x:Name="Cerceve" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Cerceve" Property="BorderBrush" Value="{StaticResource Vurgu}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Cerceve" Property="BorderBrush" Value="#55FFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CokSatir" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="AcceptsReturn" Value="True"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas"/>
+            <Setter Property="FontSize" Value="11.5"/>
+            <Setter Property="VerticalContentAlignment" Value="Top"/>
+        </Style>
+
+        <!-- koyu ComboBox -->
+        <Style TargetType="ComboBoxItem">
+            <Setter Property="Foreground" Value="#F2F2F4"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBoxItem">
+                        <Border x:Name="Zemin" Background="Transparent" Padding="{TemplateBinding Padding}" CornerRadius="4" Margin="4,1">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Zemin" Property="Background" Value="{StaticResource VurguSoluk}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Zemin" Property="Background" Value="#2EFFFFFF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Foreground" Value="#F2F2F4"/>
+            <Setter Property="Margin" Value="0,3"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <ToggleButton x:Name="Dugme" Focusable="False" ClickMode="Press"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Cerceve" Background="{StaticResource Giris}" BorderBrush="#2AFFFFFF" BorderThickness="1" CornerRadius="6">
+                                            <Path HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0"
+                                                  Data="M0,0 L4,4 8,0" Stroke="#8E8E96" StrokeThickness="1.5"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Cerceve" Property="BorderBrush" Value="#55FFFFFF"/>
+                                            </Trigger>
+                                            <Trigger Property="IsChecked" Value="True">
+                                                <Setter TargetName="Cerceve" Property="BorderBrush" Value="{StaticResource Vurgu}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              Margin="10,0,28,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                            <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" PopupAnimation="Fade" StaysOpen="False">
+                                <Border Background="#1C1C23" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="8" Padding="0,4"
+                                        MinWidth="{TemplateBinding ActualWidth}" Margin="0,4,0,0">
+                                    <ScrollViewer MaxHeight="240" VerticalScrollBarVisibility="Auto">
+                                        <StackPanel IsItemsHost="True"/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="18,7"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Background" Value="#24242C"/>
+            <Setter Property="Foreground" Value="#F2F2F4"/>
+            <Setter Property="BorderBrush" Value="#2AFFFFFF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Zemin" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Zemin" Property="Opacity" Value="0.86"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- sol menü -->
+        <Style x:Key="MenuOge" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="#B5B5BE"/>
+            <Setter Property="Padding" Value="12,9"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Zemin" Background="Transparent" CornerRadius="7" Padding="{TemplateBinding Padding}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="22"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="Glif" Text="{TemplateBinding Tag}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{TemplateBinding Foreground}"/>
+                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Zemin" Property="Background" Value="#14FFFFFF"/>
+                                <Setter Property="Foreground" Value="#F2F2F4"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Zemin" Property="Background" Value="{StaticResource VurguSoluk}"/>
+                                <Setter Property="Foreground" Value="#F2F2F4"/>
+                                <Setter TargetName="Glif" Property="Foreground" Value="{StaticResource Vurgu}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Sol: menü -->
+        <Border Grid.RowSpan="2" Background="#0A0A0E" BorderBrush="#1AFFFFFF" BorderThickness="0,0,1,0">
+            <DockPanel Margin="12,16,12,14">
+                <StackPanel DockPanel.Dock="Top" Margin="10,0,0,16">
+                    <TextBlock Text="Dinamik Ada" FontSize="15" FontWeight="SemiBold"/>
+                    <TextBlock Text="Ayarlar" FontSize="11.5" Foreground="{StaticResource Ikincil}"/>
+                </StackPanel>
+                <TextBlock DockPanel.Dock="Bottom" Margin="10,0,0,0" FontSize="10.5" Foreground="#5E5E66" TextWrapping="Wrap"
+                           Text="%AppData%\DinamikAda\ayarlar.json"/>
+                <ListBox x:Name="Menu" Background="Transparent" BorderThickness="0" ItemContainerStyle="{StaticResource MenuOge}"
+                         SelectionChanged="Bolum_Secildi" SelectedIndex="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBoxItem Content="Genel" Tag="&#xE7F4;"/>
+                    <ListBoxItem Content="Modüller" Tag="&#xE74C;"/>
+                    <ListBoxItem Content="Müzik" Tag="&#xE8D6;"/>
+                    <ListBoxItem Content="Claude" Tag="&#xE8F2;"/>
+                    <ListBoxItem Content="Hazne" Tag="&#xE8B7;"/>
+                    <ListBoxItem Content="Kısayollar" Tag="&#xE71D;"/>
+                    <ListBoxItem Content="WhatsApp" Tag="&#xE8BD;"/>
+                    <ListBoxItem Content="Sunucu" Tag="&#xE968;"/>
+                    <ListBoxItem Content="Canavar" Tag="&#xE899;"/>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Sağ: içerik -->
+        <ScrollViewer x:Name="Kaydirici" Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="24,20,24,8">
+            <Grid x:Name="Icerik">
+
+                <!-- GENEL -->
+                <StackPanel x:Name="BolumGenel">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Konum ve görünüm"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Kapsülün hangi ekranda, ne kadar yukarıda ve hangi boyutta duracağı."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Ekran"/>
+                                <ComboBox x:Name="EkranKutu" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Üstten boşluk"/>
+                                <Slider x:Name="UstBosluk" Grid.Row="1" Grid.Column="1" Minimum="0" Maximum="40" TickFrequency="1" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="UstBoslukMetin" Grid.Row="1" Grid.Column="2" TextAlignment="Right" Text="6"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="2" Text="Ölçek"/>
+                                <Slider x:Name="Olcek" Grid.Row="2" Grid.Column="1" Minimum="0.7" Maximum="1.5" TickFrequency="0.05" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="OlcekMetin" Grid.Row="2" Grid.Column="2" TextAlignment="Right" Text="1.00"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="3" Text="Saydamlık"/>
+                                <Slider x:Name="Saydamlik" Grid.Row="3" Grid.Column="1" Minimum="0.4" Maximum="1" TickFrequency="0.05" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="SaydamlikMetin" Grid.Row="3" Grid.Column="2" TextAlignment="Right" Text="100%"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Davranış"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Kapsülün ne zaman görünüp ne zaman çekileceği."/>
+                            <CheckBox x:Name="TamEkrandaGizle" Content="Tam ekran uygulama açıkken gizlen"/>
+                            <CheckBox x:Name="OyunKatmaniAcik" Content="Tam ekran oyunda gizlenme: ince şerit olarak kal (saat, CPU, GPU sıcaklığı, RAM, mesaj rozeti)" Margin="22,2,0,4"/>
+                            <CheckBox x:Name="WindowsIleBaslat" Content="Windows ile başlat"/>
+                            <Grid Style="{StaticResource Satirlar}" Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Text="Duyuru süresi (sn)"/>
+                                <Slider x:Name="DuyuruSaniye" Grid.Column="1" Minimum="2" Maximum="12" TickFrequency="1" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="DuyuruMetin" Grid.Column="2" TextAlignment="Right" Text="5"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Günün özeti"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Akşam belirlenen saatte kapsül günü özetler: en çok kullanılan uygulamalar ve süreleri, gelen mesajlar, müzik ve toplantı süresi, pomodoro ve yüklemeler. Claude düğmesine sağ tıklayarak istediğin an da açabilirsin. Veri yalnız bu bilgisayarda tutulur."/>
+                            <CheckBox x:Name="OzetAcik" Content="Akşam özetini göster"/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Text="Özet saati"/>
+                                <TextBox x:Name="OzetSaat" Grid.Column="1" Width="90" HorizontalAlignment="Left" ToolTip="SS:DD biçiminde, örnek 21:00"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- MODÜLLER -->
+                <StackPanel x:Name="BolumModuller" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Kapsülde gösterilecekler"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Kapalı olan modül ne duyuru yapar ne de kompakt görünümde yer kaplar."/>
+                            <UniformGrid Columns="2">
+                                <CheckBox x:Name="SesAcik" Content="Ses tuşu animasyonu"/>
+                                <CheckBox x:Name="KulaklikAcik" Content="Kulaklık tak / çıkar"/>
+                                <CheckBox x:Name="PilAcik" Content="Pil olayları"/>
+                                <CheckBox x:Name="MikrofonKameraAcik" Content="Mikrofon / kamera noktası"/>
+                                <CheckBox x:Name="BildirimAcik" Content="Windows bildirimleri"/>
+                                <CheckBox x:Name="HavaAcik" Content="Hava durumu"/>
+                                <CheckBox x:Name="ToplantiModuAcik" Content="Toplantı modu (mikrofon açıkken sessiz)"/>
+                                <CheckBox x:Name="AgAcik" Content="Ağ hızı ve Tailscale (boş panel)"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Modül ayarları"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Hava için şehir boş bırakılırsa konum IP adresinden bulunur."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Hava için şehir"/>
+                                <TextBox x:Name="HavaSehir" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Pomodoro (dk)"/>
+                                <Slider x:Name="PomodoroDakika" Grid.Row="1" Grid.Column="1" Minimum="5" Maximum="90" TickFrequency="5" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="PomodoroMetin" Grid.Row="1" Grid.Column="2" TextAlignment="Right" Text="25"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- MÜZİK -->
+                <StackPanel x:Name="BolumMuzik" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Şarkı sözleri"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Çalan parçanın o anki söz satırı medya panelinde ilerleme çubuğunun altında görünür. Kaynak lrclib.net; hesap gerekmez. Spotify, YouTube ve diğer oynatıcılarla çalışır."/>
+                            <CheckBox x:Name="SozlerAcik" Content="Şarkı sözlerini göster"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Spotify hesabı"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Beğen düğmesi ve sıradaki parçalar için bir kez bağlanmak gerekir. developer.spotify.com/dashboard adresinde uygulama oluşturun, Redirect URI olarak aşağıdaki adresi yazın, Client ID'yi buraya yapıştırıp bağlanın. Not: Spotify, Web API'yi yalnız Premium hesabı olan uygulama sahiplerine açıyor; Premium yoksa beğen düğmesi Spotify masaüstünün Alt+Shift+B kısayolunu kullanır (pencere bir an öne gelir), sıradakiler listesi gösterilemez."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Redirect URI"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Text="http://127.0.0.1:5462/callback" IsReadOnly="True" Foreground="#C9C9D1"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Client ID"/>
+                                <TextBox x:Name="SpotifyClientId" Grid.Row="1" Grid.Column="1" FontFamily="Cascadia Mono, Consolas" FontSize="11.5"/>
+                            </Grid>
+                            <DockPanel Margin="0,10,0,0">
+                                <Button x:Name="SpotifyBaglanDugme" DockPanel.Dock="Right" Content="Spotify'a bağlan" Click="SpotifyBaglan_Click"/>
+                                <Button x:Name="SpotifyKopar" DockPanel.Dock="Right" Content="Bağlantıyı kes" Click="SpotifyKopar_Click" Visibility="Collapsed"/>
+                                <TextBlock x:Name="SpotifyDurumMetin" VerticalAlignment="Center" FontSize="11.5" Foreground="{StaticResource Ikincil}" Text="Bağlı değil"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- CLAUDE -->
+                <StackPanel x:Name="BolumClaude" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Claude'a sor"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Kısayol çubuğundaki Claude düğmesi kapsülde soru paneli açar: yazıp Enter'a basın, başka pencerede seçili metni özetletin ya da çevirtin, haznedeki metin dosyalarını özetletin."/>
+                            <CheckBox x:Name="ClaudeAcik" Content="Claude düğmesi ve panel açık"/>
+                            <TextBlock x:Name="ClaudeKaynakMetin" Style="{StaticResource Dipnot}" Text=""/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Kaynak"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="API anahtarı boşsa makinedeki Claude Code (aboneliğiniz) kullanılır; anahtar girilirse doğrudan Claude API'ye gider. Not alanı her soruya eklenir."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="API anahtarı (isteğe bağlı)"/>
+                                <TextBox x:Name="ClaudeApiKey" Grid.Row="0" Grid.Column="1" FontFamily="Cascadia Mono, Consolas" FontSize="11.5"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Model"/>
+                                <TextBox x:Name="ClaudeModel" Grid.Row="1" Grid.Column="1" Width="260" HorizontalAlignment="Left" ToolTip="claude-sonnet-5-5, claude-opus-5-5, claude-haiku-4-5-20251001; CLI için haiku / sonnet / opus da olur"/>
+                            </Grid>
+                            <TextBlock Margin="0,8,0,0" Text="Kalıcı not (her soruya eklenir)" Foreground="#C9C9D1"/>
+                            <TextBox x:Name="ClaudeNot" Style="{StaticResource CokSatir}" Height="64" ToolTip="Örnek: Yanıtları çok kısa tut. Teknik terimleri İngilizce bırak."/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- HAZNE -->
+                <StackPanel x:Name="BolumHazne" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Hazne"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Kapsüle bırakılan ya da Ctrl+V ile yapıştırılan dosyaların nasıl tutulacağı."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Bırakınca"/>
+                                <ComboBox x:Name="HazneModu" Grid.Row="0" Grid.Column="1">
+                                    <ComboBoxItem Content="Hazneye al, düğmeyle yükle" Tag="hazne"/>
+                                    <ComboBoxItem Content="Hemen yükle, haznede göster" Tag="hemen"/>
+                                </ComboBox>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Görünüm"/>
+                                <ComboBox x:Name="HazneGorunum" Grid.Row="1" Grid.Column="1">
+                                    <ComboBoxItem Content="Liste" Tag="liste"/>
+                                    <ComboBoxItem Content="Izgara" Tag="izgara"/>
+                                </ComboBox>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="2" Text="Dışarı sürükleme"/>
+                                <ComboBox x:Name="HazneSurukleEtkisi" Grid.Row="2" Grid.Column="1" ToolTip="Haznedeki dosyayı başka pencereye bırakınca ne olsun">
+                                    <ComboBoxItem Content="Windows kuralı (Alt: kısayol, Ctrl: kopya)" Tag="otomatik"/>
+                                    <ComboBoxItem Content="Her zaman kısayol (.lnk) oluştur" Tag="kisayol"/>
+                                    <ComboBoxItem Content="Her zaman kopyala" Tag="kopyala"/>
+                                    <ComboBoxItem Content="Her zaman taşı" Tag="tasi"/>
+                                </ComboBox>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Paylaşım linki"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Link düğmesi dosyayı herkese açık klasöre kopyalar ve adresi panoya alır."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Link hedefi"/>
+                                <TextBox x:Name="LinkHedef" Grid.Row="0" Grid.Column="1" ToolTip="Herkese açık klasör: kullanici@sunucu:/var/www/.../paylas/"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Link ön eki"/>
+                                <TextBox x:Name="LinkOnek" Grid.Row="1" Grid.Column="1" ToolTip="https://alanadi/paylas/"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Sunucuya kopyalama (scp)"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Yükle düğmesi dosyaları bu hedefe gönderir. Parola sorulamaz; SSH anahtarıyla parolasız giriş gerekir."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Hedef"/>
+                                <TextBox x:Name="SurukleHedef" Grid.Row="0" Grid.Column="1" ToolTip="kullanici@sunucu:/yol/ biçiminde"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="SSH portu"/>
+                                <TextBox x:Name="SuruklePort" Grid.Row="1" Grid.Column="1" Width="90" HorizontalAlignment="Left"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="2" Text="Anahtar dosyası"/>
+                                <TextBox x:Name="SurukleAnahtar" Grid.Row="2" Grid.Column="1" ToolTip="Boşsa ssh'nin varsayılan anahtarları (~/.ssh) kullanılır"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- KISAYOLLAR -->
+                <StackPanel x:Name="BolumKisayol" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Kısayol çubuğu"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Boş panelde ses çubuğunun altında görünür. Her satır: Ad = yol. Yol bir exe, bir protokol (whatsapp://) ya da shell:AppsFolder\AUMID olabilir. Boş bırakılırsa kurulu uygulamalardan varsayılan liste gelir; çubuktaki + düğmesi de buraya yazar."/>
+                            <TextBox x:Name="Kisayollar" Style="{StaticResource CokSatir}" Height="160"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Çalışma düzenleri"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Kısayol çubuğundaki düzen düğmesi açık pencerelerin yerlerini bir adla saklar; tıklayınca kapalı uygulamaları başlatıp pencereleri aynı yerlere koyar. Burada yalnız silinir."/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ListBox x:Name="DuzenListe" Height="110" Background="#1C1C23" BorderBrush="#2AFFFFFF" BorderThickness="1" Foreground="#F2F2F4"/>
+                                <Button Grid.Column="1" Content="Seçileni sil" VerticalAlignment="Top" Click="DuzenSil_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- WHATSAPP -->
+                <StackPanel x:Name="BolumWhatsApp" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Gönderim yolu"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Köprü açıkken mesajlar pencere açılmadan arka planda gider ve gelir. Köprü kapalıysa WhatsApp uygulaması numarayla açılır."/>
+                            <CheckBox x:Name="WaServisAcik" Content="Arka plan köprüsü (WhatsApp Web, pencere açmadan gönder/al)"/>
+                            <CheckBox x:Name="WhatsAppOtomatikGonder" Content="Köprü yoksa: sohbet açılınca Enter'ı kapsül bassın"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Rehber"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Gönderen adı numaraya buradan çevrilir. Telefondan dışa aktarılan .vcf dosyasını kapsülün üstüne bırakmak yeter; elle satır da yazılabilir: Ad = 905xxxxxxxxx. Numarası bilinmeyen kişi için kapsül bir kez sorar ve buraya yazar."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Text="Rehber dosyası (.vcf)"/>
+                                <TextBox x:Name="RehberDosyasi" Grid.Column="1" ToolTip="Boşsa %AppData%\DinamikAda\rehber.vcf"/>
+                            </Grid>
+                            <TextBlock Margin="0,10,0,4" Text="Elle eklenen kişiler" Foreground="#C9C9D1"/>
+                            <TextBox x:Name="Rehber" Style="{StaticResource CokSatir}" Height="120" ToolTip="Her satır: Ad = 905xxxxxxxxx (bildirimdeki gönderen adıyla birebir)"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- SUNUCU -->
+                <StackPanel x:Name="BolumSunucu" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Sunucu durumu"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Dakikada bir ping, HEAD isteği ve SSH ile yük, disk ve RAM ölçülür. Boş paneldeki SRV halkası disk doluluğunu, ortadaki sayı ping süresini gösterir: yeşil sağlıklı, turuncu web sorunu, kırmızı erişilemiyor. Düşünce ve geri gelince kapsül duyurur."/>
+                            <CheckBox x:Name="SunucuAcik" Content="Boş panelde SRV halkası göster, sunucu düşünce uyar"/>
+                            <Grid Style="{StaticResource Satirlar}" Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Adres (IP / alan adı)"/>
+                                <TextBox x:Name="SunucuAdres" Grid.Row="0" Grid.Column="1"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="SSH kullanıcısı"/>
+                                <TextBox x:Name="SunucuSshKullanici" Grid.Row="1" Grid.Column="1" Width="160" HorizontalAlignment="Left"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="2" Text="SSH anahtarı"/>
+                                <TextBox x:Name="SunucuAnahtar" Grid.Row="2" Grid.Column="1" ToolTip="Özel anahtar yolu; boşsa ssh'nin varsayılan anahtarları kullanılır. SSH girilemezse yalnız ping ve web kontrolü yapılır."/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="İzlenecek adresler"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Her satıra bir URL. 2xx, 3xx ve 4xx cevap sayılır; zaman aşımı ve 5xx sorun sayılır."/>
+                            <TextBox x:Name="SunucuUrller" Style="{StaticResource CokSatir}" Height="90"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- CANAVAR -->
+                <StackPanel x:Name="BolumCanavar" Visibility="Collapsed">
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Canavar"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Boş kapsüldeki maskot. Ön plandaki uygulamaya göre kod yazar, oyun oynar, müzik dinler; uzun süre giriş olmazsa uyur."/>
+                            <CheckBox x:Name="CanavarAcik" Content="Kapsül boştayken canavarı göster"/>
+                            <Grid Style="{StaticResource Satirlar}" Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Text="Uyku (dk hareketsiz)"/>
+                                <Slider x:Name="UykuDakika" Grid.Column="1" Minimum="1" Maximum="30" TickFrequency="1" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="UykuMetin" Grid.Column="2" TextAlignment="Right" Text="3"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Ruh hâli"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Uzun süre aralıksız çalışınca mola hatırlatır ve gözleri yorgun düşer; gece 23'ten sonra uykulu bakar; tıklayınca zıplar; yılbaşı, millî ve dinî bayramlar ile doğum gününde şapka takar."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Mola hatırlatma (dk)"/>
+                                <Slider x:Name="MolaDakika" Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="120" TickFrequency="5" ValueChanged="Deger_Degisti" ToolTip="0: kapalı"/>
+                                <TextBlock x:Name="MolaMetin" Grid.Row="0" Grid.Column="2" TextAlignment="Right" Text="50"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Doğum günü (gg.aa)"/>
+                                <TextBox x:Name="DogumGunu" Grid.Row="1" Grid.Column="1" Width="90" HorizontalAlignment="Left" ToolTip="Örnek: 14.07"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <TextBlock x:Name="Not" Visibility="Collapsed"/>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Alt çubuk -->
+        <Border Grid.Column="1" Grid.Row="1" Background="#0A0A0E" BorderBrush="#1AFFFFFF" BorderThickness="0,1,0,0" Padding="24,12">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <Button Content="İptal" Click="Iptal_Click"/>
+                    <Button Content="Kaydet" Click="Kaydet_Click" Background="{StaticResource Vurgu}" BorderBrush="{StaticResource Vurgu}" Foreground="#0B0B0F" FontWeight="SemiBold"/>
+                </StackPanel>
+                <TextBlock FontSize="11.5" Foreground="{StaticResource Ikincil}" Text="Değişiklikler Kaydet ile uygulanır."/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,27 @@
+# Derleme çıktıları
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.swp
+
+# WhatsApp köprüsü: bağımlılıklar ve oturum (GİZLİ: asla paylaşma)
+wa-servis/node_modules/
+wa-servis/oturum-baileys/
+wa-servis/oturum/
+wa-servis/kalici.json
+wa-servis/*.log
+
+# Yerel notlar ve geçici dosyalar
+*.log
+*.tmp
+Thumbs.db
+desktop.ini
+
+# Eski whatsapp-web.js denemesinin önbelleği
+wa-servis/.wwebjs_cache/
+wa-servis/.wwebjs_auth/
+
+# Claude Code yerel ayarı
+.claude/

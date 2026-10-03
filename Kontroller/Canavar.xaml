@@ -1,0 +1,134 @@
+<UserControl x:Class="DinamikAda.Kontroller.Canavar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="28" Height="28" IsHitTestVisible="True" Background="Transparent" Cursor="Hand" ToolTip="Tıkla: tepki verir">
+    <UserControl.Resources>
+        <!-- Claude Code terminal maskotu: piksel üslubu, Anthropic turuncusu -->
+        <SolidColorBrush x:Key="Govde" Color="#D97757"/>
+        <SolidColorBrush x:Key="GovdeAcik" Color="#E8957A"/>
+        <SolidColorBrush x:Key="Koyu" Color="#1A1A22"/>
+        <SolidColorBrush x:Key="Beyaz" Color="#F5F5F7"/>
+    </UserControl.Resources>
+    <Viewbox Stretch="Uniform">
+        <!-- 16x16 piksel ızgara, piksel = 2 birim -->
+        <Canvas Width="32" Height="32" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True">
+            <Canvas x:Name="Sahne" Width="32" Height="32" RenderTransformOrigin="0.5,0.75">
+                <Canvas.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform x:Name="Nefes" ScaleX="1" ScaleY="1"/>
+                        <RotateTransform x:Name="Egil" Angle="0"/>
+                        <TranslateTransform x:Name="Zipla" X="0" Y="0"/>
+                    </TransformGroup>
+                </Canvas.RenderTransform>
+
+                <!-- Şapka: özel günlerde (yılbaşı, bayram, doğum günü); renk koddan -->
+                <Canvas x:Name="Sapka" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="12" Canvas.Top="2" Width="8" Height="2" Fill="{Binding SapkaFircasi, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    <Rectangle Canvas.Left="14" Canvas.Top="0" Width="4" Height="2" Fill="{Binding SapkaFircasi, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+                    <Rectangle x:Name="SapkaPonpon" Canvas.Left="18" Canvas.Top="0" Width="2" Height="2" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="10" Canvas.Top="4" Width="12" Height="1" Fill="{StaticResource Beyaz}" Opacity="0.9"/>
+                </Canvas>
+
+                <!-- Gövde: köşeleri kırpılmış blok (satır 1 ve 7 daha dar) -->
+                <Rectangle Canvas.Left="8"  Canvas.Top="4"  Width="16" Height="2"  Fill="{StaticResource Govde}"/>
+                <Rectangle Canvas.Left="6"  Canvas.Top="6"  Width="20" Height="12" Fill="{StaticResource Govde}"/>
+                <Rectangle Canvas.Left="8"  Canvas.Top="18" Width="16" Height="2"  Fill="{StaticResource Govde}"/>
+                <!-- Parıltı pikseli -->
+                <Rectangle Canvas.Left="8"  Canvas.Top="6"  Width="2"  Height="2"  Fill="{StaticResource GovdeAcik}"/>
+
+                <!-- Dört ayak -->
+                <Rectangle Canvas.Left="8"  Canvas.Top="20" Width="2" Height="2" Fill="{StaticResource Govde}"/>
+                <Rectangle Canvas.Left="12" Canvas.Top="20" Width="2" Height="2" Fill="{StaticResource Govde}"/>
+                <Rectangle Canvas.Left="18" Canvas.Top="20" Width="2" Height="2" Fill="{StaticResource Govde}"/>
+                <Rectangle Canvas.Left="22" Canvas.Top="20" Width="2" Height="2" Fill="{StaticResource Govde}"/>
+
+                <!-- Gözler (kırpma: dikey ölçek; bakış: yatay kayma) -->
+                <Canvas x:Name="Gozler" Width="32" Height="32" RenderTransformOrigin="0.5,0.4">
+                    <Canvas.RenderTransform>
+                        <ScaleTransform x:Name="GozKirp" ScaleY="1"/>
+                    </Canvas.RenderTransform>
+                    <Canvas x:Name="Bebekler">
+                        <Canvas.RenderTransform>
+                            <TranslateTransform x:Name="Bakis" X="0" Y="0"/>
+                        </Canvas.RenderTransform>
+                        <Rectangle Canvas.Left="10" Canvas.Top="9"  Width="2" Height="5" Fill="{StaticResource Koyu}"/>
+                        <Rectangle Canvas.Left="20" Canvas.Top="9"  Width="2" Height="5" Fill="{StaticResource Koyu}"/>
+                    </Canvas>
+                </Canvas>
+
+                <!-- Kapalı gözler (uyku) -->
+                <Canvas x:Name="GozKapali" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="9"  Canvas.Top="12" Width="4" Height="2" Fill="{StaticResource Koyu}"/>
+                    <Rectangle Canvas.Left="19" Canvas.Top="12" Width="4" Height="2" Fill="{StaticResource Koyu}"/>
+                </Canvas>
+
+                <!-- Ağız: küçük çizgi; uykuda "o" -->
+                <Rectangle x:Name="Agiz" Canvas.Left="14" Canvas.Top="15" Width="4" Height="1.5" Fill="{StaticResource Koyu}" Opacity="0.55"/>
+                <Rectangle x:Name="AgizUyku" Canvas.Left="15" Canvas.Top="15" Width="2" Height="2" Fill="{StaticResource Koyu}" Visibility="Collapsed"/>
+
+                <!-- Gözlük (iş) -->
+                <Canvas x:Name="Gozluk" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="8"  Canvas.Top="7.5" Width="6" Height="8" Stroke="{StaticResource Beyaz}" StrokeThickness="1"/>
+                    <Rectangle Canvas.Left="18" Canvas.Top="7.5" Width="6" Height="8" Stroke="{StaticResource Beyaz}" StrokeThickness="1"/>
+                    <Rectangle Canvas.Left="14" Canvas.Top="11" Width="4" Height="1" Fill="{StaticResource Beyaz}"/>
+                </Canvas>
+
+                <!-- Kulaklık (müzik) -->
+                <Canvas x:Name="Kulaklik" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="6"  Canvas.Top="2"  Width="20" Height="2" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="4"  Canvas.Top="2"  Width="2"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="26" Canvas.Top="2"  Width="2"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="3"  Canvas.Top="8"  Width="4"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="25" Canvas.Top="8"  Width="4"  Height="6" Fill="{StaticResource Beyaz}"/>
+                </Canvas>
+
+                <!-- Gamepad (oyun) -->
+                <Canvas x:Name="Gamepad" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="8"  Canvas.Top="23" Width="16" Height="6" Fill="#2A2A32" Stroke="{StaticResource Beyaz}" StrokeThickness="1"/>
+                    <Rectangle Canvas.Left="11" Canvas.Top="25" Width="2" Height="2" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="19" Canvas.Top="25" Width="2" Height="2" Fill="#FF9F0A"/>
+                </Canvas>
+
+                <!-- Meşgul (toplantıda): kulaklık + mikrofon çubuğu -->
+                <Canvas x:Name="Mesgul" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="6"  Canvas.Top="2"  Width="20" Height="2" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="4"  Canvas.Top="2"  Width="2"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="26" Canvas.Top="2"  Width="2"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="3"  Canvas.Top="8"  Width="4"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="25" Canvas.Top="8"  Width="4"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="25" Canvas.Top="14" Width="2"  Height="6" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="20" Canvas.Top="19" Width="7"  Height="2" Fill="{StaticResource Beyaz}"/>
+                    <Rectangle Canvas.Left="18" Canvas.Top="18" Width="3"  Height="3" Fill="#FF453A"/>
+                </Canvas>
+
+                <!-- Zarf (haznede dosya var): sağ elinde tutar -->
+                <Canvas x:Name="Zarf" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="22" Canvas.Top="15" Width="9" Height="7" Fill="{StaticResource Beyaz}"/>
+                    <Polygon Points="22,15 26.5,19 31,15" Fill="#C9C9CF"/>
+                    <Rectangle Canvas.Left="22" Canvas.Top="15" Width="9" Height="7" Stroke="#8A8A94" StrokeThickness="0.8"/>
+                </Canvas>
+
+                <!-- Laptop (iş): ekranda sırayla beliren kod satırları -->
+                <Canvas x:Name="Laptop" Visibility="Collapsed">
+                    <Rectangle Canvas.Left="7"  Canvas.Top="22" Width="18" Height="7" Fill="#1E1E24" Stroke="#8A8A94" StrokeThickness="1"/>
+                    <Rectangle Canvas.Left="5"  Canvas.Top="29" Width="22" Height="2" Fill="#8A8A94"/>
+                    <Rectangle x:Name="KodSatir1" Canvas.Left="9"  Canvas.Top="23.5" Width="8"  Height="1.2" Fill="#7CC7FF" Opacity="0"/>
+                    <Rectangle x:Name="KodSatir2" Canvas.Left="9"  Canvas.Top="25.5" Width="12" Height="1.2" Fill="#D97757" Opacity="0"/>
+                    <Rectangle x:Name="KodSatir3" Canvas.Left="9"  Canvas.Top="27.5" Width="6"  Height="1.2" Fill="#9BE39B" Opacity="0"/>
+                </Canvas>
+            </Canvas>
+
+            <!-- Durum dairesi: sol üst köşe, sahne hareketinden bağımsız -->
+            <Ellipse x:Name="DurumNokta" Canvas.Left="1" Canvas.Top="2" Width="7" Height="7"
+                     Fill="#3A3A42" Stroke="#09090B" StrokeThickness="1" RenderOptions.EdgeMode="Unspecified" Visibility="Collapsed"/>
+
+            <!-- Zzz (uyku) -->
+            <TextBlock x:Name="Zzz" Canvas.Left="24" Canvas.Top="0" Text="z" FontSize="9" FontWeight="Bold"
+                       Foreground="#F5F5F7" Opacity="0" Visibility="Collapsed">
+                <TextBlock.RenderTransform>
+                    <TranslateTransform x:Name="ZzzKay" X="0" Y="0"/>
+                </TextBlock.RenderTransform>
+            </TextBlock>
+        </Canvas>
+    </Viewbox>
+</UserControl>

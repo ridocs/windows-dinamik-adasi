@@ -1,0 +1,26 @@
+<UserControl x:Class="DinamikAda.Kontroller.SesSatiri"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Height="20">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <Button x:Name="SessizDugme" Grid.Column="0" Style="{StaticResource SimgeDugme}"
+                Width="24" Height="20" FontSize="13" Content="&#xE767;" Click="Sessiz_Click" ToolTip="Sesi kapat / aç"/>
+
+        <!-- Tıklama alanı 20 px yüksek, görünen ray 4 px -->
+        <Border x:Name="Ray" Grid.Column="1" Background="Transparent" Height="20" Margin="6,0" Cursor="Hand"
+                MouseLeftButtonDown="Ray_MouseDown" MouseMove="Ray_MouseMove" MouseLeftButtonUp="Ray_MouseUp">
+            <Border Height="4" CornerRadius="2" Background="{StaticResource IlerlemeRay}" VerticalAlignment="Center">
+                <Border x:Name="Dolgu" HorizontalAlignment="Left" Width="0" CornerRadius="2" Background="{StaticResource IlerlemeDolgu}"/>
+            </Border>
+        </Border>
+
+        <TextBlock x:Name="Yuzde" Grid.Column="2" FontSize="10.5" Width="38" TextAlignment="Right" VerticalAlignment="Center"
+                   Foreground="{StaticResource MetinIkincil}" Text="%0"/>
+    </Grid>
+</UserControl>

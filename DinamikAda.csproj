@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>DinamikAda</AssemblyName>
+    <RootNamespace>DinamikAda</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- WFAC010: WinForms çözümleyicisi manifestteki DPI ayarını sorguluyor; bu bir WPF uygulaması, ayar doğru -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WinForms yalnızca tepsi simgesi ve pil bilgisi için; adları WPF ile çakışmasın -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Ses seviyesi ve ses aygıtı değişimi (Core Audio sarmalayıcısı) -->
+    <PackageReference Include="NAudio.Wasapi" Version="2.2.1" />
+    <!-- Windows bildirim veritabanını (wpndatabase.db) okumak için: toast'un launch argümanı -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
+  </ItemGroup>
+
+</Project>

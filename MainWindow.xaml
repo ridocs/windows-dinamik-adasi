@@ -1,0 +1,571 @@
+<Window x:Class="DinamikAda.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:k="clr-namespace:DinamikAda.Kontroller"
+        Title="Dinamik Ada"
+        Width="720" Height="600"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        ShowActivated="False" Focusable="False"
+        TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="ClearType"
+        UseLayoutRounding="True" SnapsToDevicePixels="True">
+
+    <Window.Resources>
+        <!-- Çalarken üç çubuk nefes alır; duraklayınca kodda durdurulur -->
+        <Storyboard x:Key="EkolayzerAnim" RepeatBehavior="Forever" AutoReverse="True">
+            <DoubleAnimation Storyboard.TargetName="Cubuk1Olcek" Storyboard.TargetProperty="ScaleY" From="0.35" To="1" Duration="0:0:0.42"/>
+            <DoubleAnimation Storyboard.TargetName="Cubuk2Olcek" Storyboard.TargetProperty="ScaleY" From="1" To="0.3" Duration="0:0:0.55"/>
+            <DoubleAnimation Storyboard.TargetName="Cubuk3Olcek" Storyboard.TargetProperty="ScaleY" From="0.55" To="1" Duration="0:0:0.37"/>
+        </Storyboard>
+
+        <Style x:Key="YuvarlakKapak" TargetType="Border">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Dış kabuk: gölge burada, kırpma içeride -->
+        <Border x:Name="Ada"
+                HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,6,0,0"
+                Width="150" Height="36" CornerRadius="18"
+                Background="{StaticResource AdaZemin}"
+                BorderBrush="{StaticResource AdaKenar}" BorderThickness="0"
+                MouseEnter="Ada_MouseEnter" MouseLeave="Ada_MouseLeave"
+                SizeChanged="Ada_SizeChanged"
+                AllowDrop="True" DragEnter="Ada_DragEnter" DragOver="Ada_DragEnter" DragLeave="Ada_DragLeave" Drop="Ada_Drop">
+            <Border.LayoutTransform>
+                <ScaleTransform x:Name="AdaOlcek" ScaleX="1" ScaleY="1"/>
+            </Border.LayoutTransform>
+            <Border.Effect>
+                <DropShadowEffect x:Name="AdaGolge" BlurRadius="26" ShadowDepth="5" Direction="270" Opacity="0.5" Color="Black"/>
+            </Border.Effect>
+
+            <Grid x:Name="Icerik">
+                <!-- Noise dokusu: kodda üretilen küçük rastgele bitmap, döşenir -->
+                <Rectangle x:Name="Doku" IsHitTestVisible="False" Opacity="0.0"/>
+                <!-- Üst kenarda çok hafif ışık: derinlik hissi -->
+                <Rectangle Height="1" VerticalAlignment="Top" Margin="18,0,18,0" IsHitTestVisible="False">
+                    <Rectangle.Fill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                            <GradientStop Color="#00FFFFFF" Offset="0"/>
+                            <GradientStop Color="#22FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#00FFFFFF" Offset="1"/>
+                        </LinearGradientBrush>
+                    </Rectangle.Fill>
+                </Rectangle>
+
+                <!-- ============ KOMPAKT ============ -->
+                <Grid x:Name="Kompakt" Height="34" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Sütun 1: haznede dosya var (ataç + sayı) -->
+                    <StackPanel x:Name="KompaktHazne" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed">
+                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="12" Text="&#xE723;" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="KompaktHazneSayi" FontSize="11.5" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MetinBirincil}" Text="1"/>
+                    </StackPanel>
+
+                    <!-- Sütun 0: medya ya da saat -->
+                    <Grid Grid.Column="0">
+                        <Grid x:Name="KompaktMedya" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="22" Height="22" CornerRadius="6" Margin="6,0,8,0" Style="{StaticResource YuvarlakKapak}">
+                                <Border.OpacityMask>
+                                    <VisualBrush>
+                                        <VisualBrush.Visual>
+                                            <Border Width="22" Height="22" CornerRadius="6" Background="Black"/>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Border.OpacityMask>
+                                <Image x:Name="KompaktKapak" Stretch="UniformToFill"/>
+                            </Border>
+
+                            <k:KayanMetin x:Name="KompaktBaslik" Grid.Column="1" VerticalAlignment="Center"
+                                          FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" Text="…"/>
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,10,0" VerticalAlignment="Center" Height="14">
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource MetinBirincil}" RenderTransformOrigin="0.5,1" Margin="0,0,2,0">
+                                    <Rectangle.RenderTransform><ScaleTransform x:Name="Cubuk1Olcek" ScaleY="0.35"/></Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource MetinBirincil}" RenderTransformOrigin="0.5,1" Margin="0,0,2,0">
+                                    <Rectangle.RenderTransform><ScaleTransform x:Name="Cubuk2Olcek" ScaleY="0.35"/></Rectangle.RenderTransform>
+                                </Rectangle>
+                                <Rectangle Width="3" Height="14" RadiusX="1.5" RadiusY="1.5" Fill="{StaticResource MetinBirincil}" RenderTransformOrigin="0.5,1">
+                                    <Rectangle.RenderTransform><ScaleTransform x:Name="Cubuk3Olcek" ScaleY="0.35"/></Rectangle.RenderTransform>
+                                </Rectangle>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Okunmamış mesaj çipi: duyuru bittikten sonra, fare gelene kadar kalır -->
+                        <StackPanel x:Name="KompaktBildirim" Orientation="Horizontal" VerticalAlignment="Center" Margin="7,0,12,0" Visibility="Collapsed">
+                            <Border Width="22" Height="22" CornerRadius="6" Background="#22FFFFFF" VerticalAlignment="Center">
+                                <Border.OpacityMask>
+                                    <VisualBrush>
+                                        <VisualBrush.Visual>
+                                            <Border Width="22" Height="22" CornerRadius="6" Background="Black"/>
+                                        </VisualBrush.Visual>
+                                    </VisualBrush>
+                                </Border.OpacityMask>
+                                <Image x:Name="KompaktBildirimLogo" Stretch="UniformToFill"/>
+                            </Border>
+                            <TextBlock x:Name="KompaktBildirimBaslik" FontSize="12.5" FontWeight="SemiBold" Margin="8,0,0,0" MaxWidth="120" VerticalAlignment="Center"
+                                       Foreground="{StaticResource MetinBirincil}" TextTrimming="CharacterEllipsis" Text=""/>
+                            <TextBlock x:Name="KompaktBildirimMetin" FontSize="12" Margin="6,0,0,0" MaxWidth="180" VerticalAlignment="Center"
+                                       Foreground="{StaticResource MetinIkincil}" TextTrimming="CharacterEllipsis" Text=""/>
+                            <Border x:Name="KompaktBildirimSayi" CornerRadius="8" Background="{StaticResource Vurgu}" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center" Visibility="Collapsed">
+                                <TextBlock x:Name="KompaktBildirimSayiMetin" FontSize="10.5" FontWeight="Bold" Foreground="#0B0B0F" Text="2"/>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel x:Name="KompaktBos" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0,12,0">
+                            <k:Canavar x:Name="KompaktCanavar" Width="28" Height="28" Margin="2,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="KompaktSaat" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" Text="00:00" Visibility="Collapsed"/>
+                            <StackPanel x:Name="KompaktHava" Orientation="Horizontal" Margin="10,0,0,0" Visibility="Collapsed">
+                                <TextBlock x:Name="KompaktHavaSimge" FontSize="11.5" FontFamily="Segoe UI Emoji" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text=""/>
+                                <TextBlock x:Name="KompaktHavaDerece" FontSize="11.5" Margin="4,0,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                            </StackPanel>
+                            <TextBlock x:Name="KompaktPil" FontSize="11.5" Margin="10,0,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Sütun 1: pomodoro halkası -->
+                    <StackPanel x:Name="KompaktPomodoro" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed">
+                        <Grid Width="16" Height="16">
+                            <Ellipse Stroke="{StaticResource IlerlemeRay}" StrokeThickness="2.5"/>
+                            <Path x:Name="PomodoroHalka" Stroke="#FF9F0A" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                        </Grid>
+                        <TextBlock x:Name="KompaktPomodoroSure" FontSize="11.5" FontWeight="SemiBold" Margin="6,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{StaticResource MetinBirincil}" Text="25:00"/>
+                    </StackPanel>
+
+                    <!-- Sütun 2: mikrofon / kamera noktaları -->
+                    <StackPanel x:Name="KompaktGizlilik" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0" Visibility="Collapsed">
+                        <Ellipse x:Name="MikrofonNokta" Width="7" Height="7" Fill="#FF9F0A" Margin="0,0,4,0" Visibility="Collapsed" ToolTip="Mikrofon kullanımda"/>
+                        <Ellipse x:Name="KameraNokta" Width="7" Height="7" Fill="#30D158" Visibility="Collapsed" ToolTip="Kamera kullanımda"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ OYUN KATMANI: tam ekran oyunda ince şerit ============ -->
+                <Grid x:Name="MiniKatman" Height="26" Opacity="0" Visibility="Collapsed" IsHitTestVisible="False" VerticalAlignment="Top" HorizontalAlignment="Stretch">
+                    <StackPanel x:Name="MiniIcerik" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="12,0">
+                        <TextBlock x:Name="MiniSaat" FontSize="11.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text="00:00"/>
+                        <TextBlock Text="·" FontSize="11" Margin="7,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                        <TextBlock Text="CPU" FontSize="9.5" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="MiniCpu" FontSize="11" FontWeight="SemiBold" Margin="3,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text="0"/>
+                        <StackPanel x:Name="MiniGpuKutu" Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="·" FontSize="11" Margin="7,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                            <TextBlock Text="GPU" FontSize="9.5" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="MiniGpu" FontSize="11" FontWeight="SemiBold" Margin="3,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text="0°"/>
+                            <TextBlock x:Name="MiniGpuYuk" FontSize="10" Margin="3,0,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text="%0"/>
+                        </StackPanel>
+                        <TextBlock Text="·" FontSize="11" Margin="7,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                        <TextBlock Text="RAM" FontSize="9.5" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="MiniRam" FontSize="11" FontWeight="SemiBold" Margin="3,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text="0"/>
+                        <Border x:Name="MiniMesaj" CornerRadius="7" Background="{StaticResource Vurgu}" Padding="6,0" Margin="9,0,0,0" Height="14" VerticalAlignment="Center" Visibility="Collapsed">
+                            <TextBlock x:Name="MiniMesajSayi" FontSize="9.5" FontWeight="Bold" Foreground="#0B0B0F" VerticalAlignment="Center" Text="1"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ DUYURU (geçici) ============ -->
+                <Grid x:Name="Duyuru" Opacity="0" Visibility="Collapsed" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="8,0,14,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid Grid.Column="0" Width="28" Height="28" Margin="0,0,10,0" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <TransformGroup>
+                                <ScaleTransform x:Name="DuyuruSimgeOlcek" ScaleX="1" ScaleY="1"/>
+                                <TranslateTransform x:Name="DuyuruSimgeKay" X="0" Y="0"/>
+                            </TransformGroup>
+                        </Grid.RenderTransform>
+                        <Border x:Name="DuyuruLogoKutu" CornerRadius="7" Background="#22FFFFFF" Visibility="Collapsed">
+                            <Border.OpacityMask>
+                                <VisualBrush>
+                                    <VisualBrush.Visual>
+                                        <Border Width="28" Height="28" CornerRadius="7" Background="Black"/>
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Border.OpacityMask>
+                            <Image x:Name="DuyuruLogo" Stretch="UniformToFill"/>
+                        </Border>
+                        <TextBlock x:Name="DuyuruGlif" FontFamily="Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{StaticResource MetinBirincil}" Text=""/>
+                        <TextBlock x:Name="DuyuruEmoji" FontFamily="Segoe UI Emoji" FontSize="15" Foreground="{StaticResource MetinBirincil}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="" Visibility="Collapsed"/>
+                    </Grid>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" MaxWidth="300">
+                        <TextBlock x:Name="DuyuruBaslik" FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" TextTrimming="CharacterEllipsis" Text=""/>
+                        <TextBlock x:Name="DuyuruMetin" FontSize="11" Foreground="{StaticResource MetinIkincil}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0" Text=""/>
+                    </StackPanel>
+
+                    <!-- Ses seviyesi gibi oranlı duyurular için çubuk -->
+                    <StackPanel x:Name="DuyuruOranKutu" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Visibility="Collapsed">
+                        <Border Width="110" Height="4" CornerRadius="2" Background="{StaticResource IlerlemeRay}" VerticalAlignment="Center" ClipToBounds="True">
+                            <Border x:Name="DuyuruOranDolgu" HorizontalAlignment="Left" Width="0" CornerRadius="2" Background="{StaticResource IlerlemeDolgu}">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="DuyuruOranKay" X="0"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Border>
+                        <TextBlock x:Name="DuyuruOranMetin" FontSize="11" Width="34" TextAlignment="Right" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ GENİŞ, medya ============ -->
+                <Grid x:Name="GenisMedya" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="380" Height="142" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <Grid Margin="16,14,16,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Kapak 88x88; sağ alt köşesine oturan kontrol hapı (önceki · oynat · sonraki) -->
+                            <Grid Grid.Column="0" Width="88" Height="88">
+                                <Border Width="88" Height="88" CornerRadius="16" Style="{StaticResource YuvarlakKapak}">
+                                    <Border.OpacityMask>
+                                        <VisualBrush>
+                                            <VisualBrush.Visual>
+                                                <Border Width="88" Height="88" CornerRadius="16" Background="Black"/>
+                                            </VisualBrush.Visual>
+                                        </VisualBrush>
+                                    </Border.OpacityMask>
+                                    <Image x:Name="GenisKapak" Stretch="UniformToFill"/>
+                                </Border>
+                                <Border HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-12,-8" CornerRadius="17"
+                                        Background="#F009090B" BorderBrush="#26FFFFFF" BorderThickness="1" Padding="3">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.45"/>
+                                    </Border.Effect>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="10" Content="&#xE892;" Click="Onceki_Click" ToolTip="Önceki"/>
+                                        <Button x:Name="OynatDugmesi" Style="{StaticResource OynatDugme}" Width="26" Height="26" FontSize="11" Margin="2,0" Content="&#xE768;" Click="OynatDuraklat_Click" ToolTip="Oynat / Duraklat"/>
+                                        <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="10" Content="&#xE893;" Click="Sonraki_Click" ToolTip="Sonraki"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <Grid Grid.Column="1" Margin="24,2,0,0">
+                                <StackPanel VerticalAlignment="Top" Margin="0,0,60,0">
+                                    <TextBlock x:Name="GenisBaslik" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" TextTrimming="CharacterEllipsis" Text="…"/>
+                                    <TextBlock x:Name="GenisSanatci" FontSize="12.5" Margin="0,3,0,0" Foreground="{StaticResource MetinIkincil}" TextTrimming="CharacterEllipsis" Text=""/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                        <TextBlock x:Name="GenisSaat" FontSize="11.5" Foreground="{StaticResource MetinIkincil}" Text="00:00"/>
+                                        <TextBlock x:Name="GenisPil" FontSize="11.5" Margin="10,0,0,0" Foreground="{StaticResource MetinIkincil}" Text=""/>
+                                        <TextBlock x:Name="GenisGizlilik" FontSize="11.5" Margin="10,0,0,0" Foreground="#FF9F0A" Text=""/>
+                                    </StackPanel>
+
+                                    <!-- Kaynak uygulama: simge + ad -->
+                                    <StackPanel x:Name="GenisUygulama" Orientation="Horizontal" Margin="0,6,0,0" Visibility="Collapsed">
+                                        <Image x:Name="GenisUygulamaSimge" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock x:Name="GenisUygulamaAd" FontSize="11" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Sağ üst köşe: beğen (ve sıradakiler); yalnız Spotify çalarken ve hesap bağlıyken -->
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-6,0,0">
+                                    <!-- Panel açıkken ses değişince 1,5 sn görünen rozet (ses çubuğu kaldırıldı) -->
+                                    <Border x:Name="MedyaSesRozet" CornerRadius="9" Background="#14FFFFFF" Padding="7,2" Margin="0,5,6,0" VerticalAlignment="Top" Visibility="Collapsed">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock x:Name="MedyaSesGlif" FontFamily="Segoe MDL2 Assets" FontSize="10" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                                            <TextBlock x:Name="MedyaSesYuzde" FontSize="10.5" Margin="5,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text="%0"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <Button x:Name="KuyrukDugme" Style="{StaticResource SimgeDugme}" Width="28" Height="28" FontSize="13" Content="&#xE8FD;" Click="Kuyruk_Click" ToolTip="Sıradakiler" Visibility="Collapsed"/>
+                                    <Button x:Name="BegenDugme" Style="{StaticResource SimgeDugme}" Width="28" Height="28" FontSize="13" Content="&#xEB51;" Click="Begen_Click" ToolTip="Beğen" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+
+                        <!-- Şarkı sözü: o anki satır (lrclib); sözler yoksa gizli, panel 24 px kısa -->
+                        <TextBlock x:Name="SozMetin" Grid.Row="1" Margin="0,16,0,0" Height="18" FontSize="12.5" FontWeight="SemiBold" TextAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" Foreground="{StaticResource MetinBirincil}" Text="" Visibility="Collapsed"
+                                   ToolTip="Şarkı sözleri (lrclib.net)"/>
+
+                        <!-- İlerleme: 16 px tıklama alanı, 4 px görünen ray -->
+                        <Grid Grid.Row="2" Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="GecenSure" Grid.Column="0" FontSize="10.5" Width="32" VerticalAlignment="Center" Foreground="{StaticResource MetinIkincil}" Text="0:00"/>
+                            <Border x:Name="IlerlemeTik" Grid.Column="1" Height="16" Background="Transparent" Margin="4,0" Cursor="Hand"
+                                    MouseLeftButtonDown="Ilerleme_MouseDown">
+                                <Border x:Name="IlerlemeRay" Height="4" CornerRadius="2" Background="{StaticResource IlerlemeRay}" VerticalAlignment="Center">
+                                    <Border x:Name="IlerlemeDolgu" HorizontalAlignment="Left" Width="0" CornerRadius="2" Background="{StaticResource IlerlemeDolgu}"/>
+                                </Border>
+                            </Border>
+                            <TextBlock x:Name="KalanSure" Grid.Column="2" FontSize="10.5" Width="36" TextAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource MetinIkincil}" Text="-0:00"/>
+                        </Grid>
+
+                        <k:PomodoroSatiri x:Name="MedyaPomodoro" Grid.Row="3" Margin="0,6,0,0" Visibility="Collapsed"/>
+                    </Grid>
+                </Grid>
+
+                <!-- ============ GENİŞ, okunmamış mesajlar ============ -->
+                <Grid x:Name="GenisBildirim" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="380" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="16,12,16,10">
+                        <ItemsControl x:Name="BildirimListe">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,0,10" Background="Transparent" Cursor="Hand" Tag="{Binding}"
+                                          MouseLeftButtonUp="BildirimOge_Click" ToolTip="Tıkla: uygulamada aç">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="34" Height="34" CornerRadius="9" Background="#22FFFFFF" VerticalAlignment="Top" Margin="0,2,12,0">
+                                            <Border.OpacityMask>
+                                                <VisualBrush>
+                                                    <VisualBrush.Visual>
+                                                        <Border Width="34" Height="34" CornerRadius="9" Background="Black"/>
+                                                    </VisualBrush.Visual>
+                                                </VisualBrush>
+                                            </Border.OpacityMask>
+                                            <Image Source="{Binding Logo}" Stretch="UniformToFill"/>
+                                        </Border>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock FontSize="10.5" Foreground="{StaticResource MetinIkincil}" Text="{Binding UstBilgi}"/>
+                                            <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" TextTrimming="CharacterEllipsis" Text="{Binding Baslik}" Margin="0,1,0,2"/>
+                                            <TextBlock FontSize="12" Foreground="#D0D0D6" TextWrapping="Wrap" MaxHeight="72" Text="{Binding Govde}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- Numara bilinmiyorsa bir kez istenir, rehbere yazılır -->
+                        <Grid x:Name="NumaraSatiri" Margin="0,2,0,6" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="NumaraEtiket" FontSize="11" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Margin="0,0,8,0" Text="Numara:"/>
+                            <Border Grid.Column="1" CornerRadius="8" Background="#14FFFFFF" Padding="8,0">
+                                <TextBox x:Name="NumaraKutu" Background="Transparent" BorderThickness="0" Foreground="{StaticResource MetinBirincil}"
+                                         CaretBrush="{StaticResource Vurgu}" FontSize="12" Height="26" VerticalContentAlignment="Center"
+                                         PreviewMouseLeftButtonDown="CevapKutu_Tik" ToolTip="905xxxxxxxxx biçiminde; bir kez girin, rehbere kaydedilir"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Cevap: WhatsApp'ı kişi ve metinle açar (bildirime doğrudan cevap Windows'ta mümkün değil) -->
+                        <Grid x:Name="CevapSatiri" Margin="0,2,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border CornerRadius="10" Background="#14FFFFFF" Padding="10,0">
+                                <TextBox x:Name="CevapKutu" Background="Transparent" BorderThickness="0" Foreground="{StaticResource MetinBirincil}"
+                                         CaretBrush="{StaticResource Vurgu}" FontSize="12.5" Height="32" VerticalContentAlignment="Center"
+                                         GotKeyboardFocus="CevapKutu_Odak" PreviewMouseLeftButtonDown="CevapKutu_Tik" KeyDown="CevapKutu_Tus"/>
+                            </Border>
+                            <TextBlock x:Name="CevapIpucu" IsHitTestVisible="False" Text="Cevap yaz, Enter ile WhatsApp'ta gönder" FontSize="12"
+                                       Foreground="#6E6E78" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                            <Button Grid.Column="1" Style="{StaticResource SimgeDugme}" Content="&#xE724;" Margin="6,0,0,0" ToolTip="WhatsApp'ta gönder" Click="CevapGonder_Click"/>
+                        </Grid>
+                        <TextBlock FontSize="10" Foreground="#6E6E78" Text="tıkla: uygulamada aç · fare çekilince okundu sayılır" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ GENİŞ, WhatsApp bağlantısı (QR) ============ -->
+                <Grid x:Name="GenisQr" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="380" Height="300" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="16,14,16,12" HorizontalAlignment="Center">
+                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" TextAlignment="Center" Text="WhatsApp'ı bağla"/>
+                        <TextBlock FontSize="11" Foreground="{StaticResource MetinIkincil}" TextAlignment="Center" Margin="0,2,0,10" TextWrapping="Wrap"
+                                   Text="Telefonda WhatsApp > Bağlı cihazlar > Cihaz bağla, bu kodu okutun. Bir kez yeter."/>
+                        <Border Background="White" CornerRadius="10" Padding="8" HorizontalAlignment="Center">
+                            <Image x:Name="QrResim" Width="200" Height="200" Stretch="Uniform"/>
+                        </Border>
+                        <TextBlock x:Name="QrDurum" FontSize="10.5" Foreground="{StaticResource MetinIkincil}" TextAlignment="Center" Margin="0,8,0,0" Text="kod 20 sn'de bir yenilenir"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ GENİŞ, Claude'a sor ============ -->
+                <Grid x:Name="GenisSoru" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="380" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="16,12,16,12">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8F2;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="SoruBaslik" Text="Claude'a sor" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="SoruKaynak" FontSize="10" Margin="8,1,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                            </StackPanel>
+                            <Button Style="{StaticResource SimgeDugme}" HorizontalAlignment="Right" Width="26" Height="26" FontSize="11" Content="&#xE711;" ToolTip="Kapat (Esc)" Click="SoruKapat_Click"/>
+                        </Grid>
+
+                        <Grid Margin="0,8,0,0">
+                            <Border CornerRadius="9" Background="#14FFFFFF">
+                                <TextBox x:Name="SoruKutu" Background="Transparent" BorderThickness="0" Foreground="{StaticResource MetinBirincil}" CaretBrush="{StaticResource MetinBirincil}"
+                                         SelectionBrush="{StaticResource Vurgu}" FontSize="12.5" Padding="10,7,36,7" TextWrapping="Wrap" MaxHeight="72" VerticalScrollBarVisibility="Auto"
+                                         PreviewMouseLeftButtonDown="SoruKutu_Tik" KeyDown="SoruKutu_KeyDown" TextChanged="SoruKutu_TextChanged"/>
+                            </Border>
+                            <TextBlock x:Name="SoruIpucu" IsHitTestVisible="False" Text="Bir şey sor… Enter gönderir" FontSize="12.5" Foreground="#6E6E78" Margin="11,0,0,0" VerticalAlignment="Center"/>
+                            <Button Style="{StaticResource SimgeDugme}" HorizontalAlignment="Right" Width="30" Height="28" FontSize="12" Margin="0,0,3,0" Content="&#xE724;" ToolTip="Gönder" Click="SoruGonder_Click"/>
+                        </Grid>
+
+                        <!-- Hızlı eylemler: seçili metin (önceki pencereye Ctrl+C), pano -->
+                        <StackPanel Orientation="Horizontal" Margin="-6,8,0,0">
+                            <Button Style="{StaticResource AltDugme}" Tag="&#xE8C8;" Content="Seçiliyi özetle" Click="SeciliOzetle_Click" ToolTip="Başka pencerede seçili metni kopyalar ve özetletir"/>
+                            <Button Style="{StaticResource AltDugme}" Tag="&#xE8C1;" Content="Seçiliyi çevir" Click="SeciliCevir_Click" ToolTip="Türkçe ise İngilizceye, değilse Türkçeye"/>
+                            <Button Style="{StaticResource AltDugme}" Tag="&#xE77F;" Content="Panoyu özetle" Click="PanoOzetle_Click" ToolTip="Panodaki metni özetletir"/>
+                        </StackPanel>
+
+                        <ScrollViewer x:Name="SoruCevapKaydir" MaxHeight="200" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar" BasedOn="{StaticResource InceKaydirma}"/>
+                            </ScrollViewer.Resources>
+                            <TextBox x:Name="SoruCevap" IsReadOnly="True" Background="Transparent" BorderThickness="0" TextWrapping="Wrap" FontSize="12"
+                                     Foreground="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" Padding="2,0,8,0" PreviewMouseLeftButtonDown="SoruKutu_Tik"/>
+                        </ScrollViewer>
+                        <Grid x:Name="SoruAltSatir" Margin="0,8,0,0" Visibility="Collapsed">
+                            <TextBlock x:Name="SoruDurum" FontSize="10" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text="" Margin="0,0,190,0" TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button Style="{StaticResource AltDugme}" Tag="&#xE8C8;" Content="Kopyala" Click="SoruKopyala_Click"/>
+                                <Button Style="{StaticResource AltDugme}" Tag="&#xE72C;" Content="Yeni sohbet" Click="SoruSifirla_Click" ToolTip="Önceki soruları unutur"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ GENİŞ, hazne ============ -->
+                <Grid x:Name="GenisHazne" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <k:HaznePaneli x:Name="HaznePanel"/>
+                </Grid>
+
+                <!-- ============ GENİŞ, medya yok ============ -->
+                <Grid x:Name="GenisBos" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="380" Height="212" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <Grid Margin="20,14,20,14">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Sahne: maskot, arkasında yumuşak turuncu ışık -->
+                            <Grid Grid.Column="0" Width="64" Height="64" Margin="0,0,14,0">
+                                <Ellipse>
+                                    <Ellipse.Fill>
+                                        <RadialGradientBrush>
+                                            <GradientStop Color="#55D97757" Offset="0"/>
+                                            <GradientStop Color="#00D97757" Offset="1"/>
+                                        </RadialGradientBrush>
+                                    </Ellipse.Fill>
+                                </Ellipse>
+                                <Ellipse Width="52" Height="52" Fill="#12FFFFFF"/>
+                                <k:Canavar x:Name="GenisCanavar" Width="40" Height="40"/>
+                            </Grid>
+
+                            <!-- Saat ve tarih -->
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="GenisBosSaat" FontFamily="Segoe UI Variable Display, Segoe UI" FontWeight="Light" FontSize="38"
+                                           Foreground="{StaticResource MetinBirincil}" Text="00:00" Margin="0,-8,0,0"/>
+                                <StackPanel Orientation="Horizontal" Margin="2,-2,0,0">
+                                    <TextBlock x:Name="GenisBosTarih" FontSize="10.5" Foreground="{StaticResource MetinIkincil}" Text=""/>
+                                    <TextBlock x:Name="GenisBosPil" FontSize="10.5" Margin="10,0,0,0" Foreground="{StaticResource MetinIkincil}" Text=""/>
+                                    <Ellipse x:Name="GenisCanavarDurum" Width="8" Height="8" Margin="10,0,0,0" VerticalAlignment="Center" Fill="#3A3A42" Visibility="Collapsed"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Sağ: CPU ve RAM halkaları -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel>
+                                    <Grid Width="30" Height="30">
+                                        <Ellipse Stroke="{StaticResource IlerlemeRay}" StrokeThickness="2.5"/>
+                                        <Path x:Name="CpuHalka" Stroke="{StaticResource Vurgu}" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                        <TextBlock x:Name="CpuMetin" FontSize="8.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="0"/>
+                                    </Grid>
+                                    <TextBlock Text="CPU" FontSize="8.5" Foreground="{StaticResource MetinIkincil}" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <StackPanel Margin="12,0,0,0">
+                                    <Grid Width="30" Height="30">
+                                        <Ellipse Stroke="{StaticResource IlerlemeRay}" StrokeThickness="2.5"/>
+                                        <Path x:Name="RamHalka" Stroke="{StaticResource Vurgu}" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                        <TextBlock x:Name="RamMetin" FontSize="8.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="0"/>
+                                    </Grid>
+                                    <TextBlock Text="RAM" FontSize="8.5" Foreground="{StaticResource MetinIkincil}" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                </StackPanel>
+                                <!-- Sunucu: halka disk doluluğu, renk sağlık (yeşil/turuncu/kırmızı); ipucunda ayrıntı -->
+                                <StackPanel x:Name="SunucuKutu" Margin="12,0,0,0" Visibility="Collapsed">
+                                    <Grid Width="30" Height="30">
+                                        <Ellipse Stroke="{StaticResource IlerlemeRay}" StrokeThickness="2.5"/>
+                                        <Path x:Name="SunucuHalka" Stroke="#30D158" StrokeThickness="2.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
+                                        <TextBlock x:Name="SunucuMetin" FontSize="8.5" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="…"/>
+                                    </Grid>
+                                    <TextBlock Text="SRV" FontSize="8.5" Foreground="{StaticResource MetinIkincil}" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- Hava (ayardan açılırsa) -->
+                            <StackPanel x:Name="GenisHava" Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Top" Visibility="Collapsed" Margin="0,0,0,0">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock x:Name="GenisHavaSimge" FontFamily="Segoe UI Emoji" FontSize="16" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text=""/>
+                                    <TextBlock x:Name="GenisHavaDerece" FontSize="18" FontWeight="SemiBold" Margin="6,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Text=""/>
+                                </StackPanel>
+                                <TextBlock x:Name="GenisHavaAciklama" FontSize="10" Foreground="{StaticResource MetinIkincil}" TextAlignment="Right" Text=""/>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock x:Name="GenisBosGizlilik" Grid.Row="1" FontSize="11" Foreground="#FF9F0A" Margin="0,6,0,0" Text="" Visibility="Collapsed"/>
+                        <!-- Ağ satırı: solda indirme/yükleme hızı, sağda Tailscale çipi (kurulu değilse gizli) -->
+                        <Grid x:Name="AgSatiri" Grid.Row="2" Margin="0,8,0,0" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE74B;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="AgIndirme" FontSize="10.5" Margin="4,0,0,0" MinWidth="58" Foreground="{StaticResource MetinBirincil}" Text="0 KB/s"/>
+                                <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets" FontSize="9" Margin="10,0,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="AgYukleme" FontSize="10.5" Margin="4,0,0,0" MinWidth="58" Foreground="{StaticResource MetinBirincil}" Text="0 KB/s"/>
+                            </StackPanel>
+                            <Border x:Name="VpnCip" HorizontalAlignment="Right" VerticalAlignment="Center" CornerRadius="9" Padding="8,2" Background="#14FFFFFF" Visibility="Collapsed">
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse x:Name="VpnNokta" Width="6" Height="6" Fill="#3A3A42" VerticalAlignment="Center"/>
+                                    <TextBlock x:Name="VpnMetin" FontSize="10" Margin="6,0,0,0" Foreground="{StaticResource MetinIkincil}" Text="Tailscale"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                        <Rectangle Grid.Row="3" Height="1" Fill="#14FFFFFF" Margin="0,10,0,0"/>
+                        <StackPanel Grid.Row="4">
+                            <k:SesSatiri x:Name="BosSes" Margin="0,10,0,0"/>
+                            <!-- Kısayol çubuğu: uygulama simgeleri, kodda doldurulur -->
+                            <WrapPanel x:Name="KisayolCubugu" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <k:PomodoroSatiri x:Name="BosPomodoro" Grid.Row="3" Visibility="Collapsed"/>
+                    </Grid>
+                </Grid>
+
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
