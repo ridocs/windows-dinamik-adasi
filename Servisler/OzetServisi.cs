@@ -166,4 +166,40 @@ public sealed class OzetServisi
         if (!GetLastInputInfo(ref li)) return 0;
         return (Environment.TickCount64 - li.dwTime) / 1000.0;
     }
+
+    /// Son 7 günün özet dosyalarını topla: toplam süreler, en çok uygulamalar, mesaj, oyun, izleme
+    public string HaftalikOzet()
+    {
+        Kaydet();
+        var gunler = new List<Gun>();
+        for (int i = 0; i < 7; i++)
+        {
+            var t = DateTime.Today.AddDays(-i);
+            string yol = Path.Combine(Klasor, t.ToString("yyyy-MM-dd") + ".json");
+            if (!File.Exists(yol)) continue;
+            try { var g = JsonSerializer.Deserialize<Gun>(File.ReadAllText(yol)); if (g != null) gunler.Add(g); } catch { }
+        }
+        if (gunler.Count == 0) return "Son 7 günde kayıtlı etkinlik yok.";
+
+        int aktif = gunler.Sum(g => g.Aktif), oyun = gunler.Sum(g => g.Oyun), medya = gunler.Sum(g => g.Medya);
+        int wa = gunler.Sum(g => g.MesajWa), pomo = gunler.Sum(g => g.Pomodoro);
+        var uyg = new Dictionary<string, int>();
+        foreach (var g in gunler) foreach (var kv in g.Uygulama) uyg[kv.Key] = uyg.GetValueOrDefault(kv.Key) + kv.Value;
+        var izl = new Dictionary<string, int>();
+        foreach (var g in gunler) foreach (var v in g.Izlemeler) izl[v.Baslik] = izl.GetValueOrDefault(v.Baslik) + v.Dakika;
+
+        var kultur = new System.Globalization.CultureInfo("tr-TR");
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"Son 7 gün ({gunler.Count} gün kayıtlı) · toplam başında {Sure(aktif)}, günlük ort. {Sure(aktif / Math.Max(1, gunler.Count))}");
+        var enCok = uyg.Where(k => k.Value >= 300).OrderByDescending(k => k.Value).Take(6).ToList();
+        if (enCok.Count > 0) sb.AppendLine("En çok: " + string.Join(" · ", enCok.Select(k => $"{UygulamaAdi(k.Key)} {Sure(k.Value)}")));
+        var mesaj = new List<string>();
+        if (wa > 0) mesaj.Add($"{wa} WhatsApp mesajı");
+        if (pomo > 0) mesaj.Add($"{pomo} pomodoro");
+        if (oyun >= 300) mesaj.Add("oyun " + Sure(oyun));
+        if (medya >= 300) mesaj.Add("müzik/video " + Sure(medya));
+        if (mesaj.Count > 0) sb.AppendLine(string.Join(" · ", mesaj));
+        if (izl.Count > 0) sb.AppendLine("İzlenenler: " + string.Join(" · ", izl.OrderByDescending(k => k.Value).Take(4).Select(k => $"{k.Key} ({k.Value} dk)")));
+        return sb.ToString().TrimEnd();
+    }
 }

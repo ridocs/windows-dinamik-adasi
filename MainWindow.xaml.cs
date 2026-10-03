@@ -65,7 +65,8 @@ public partial class MainWindow : Window
     private bool _karisimGoster, _karisimYenileniyor;
     private readonly DispatcherTimer _sesRozetZaman = new() { Interval = TimeSpan.FromMilliseconds(1600) };   // medya panelinde ses rozeti
     private readonly OzetServisi _ozet = new();             // günün özeti + kesintisiz çalışma sayacı
-    private string _ozetGosterildi = "";                    // "yyyy-MM-dd": o günün akşam özeti gösterildi
+    private string _ozetGosterildi = "";
+    private string _haftaGosterildi = "";                    // "yyyy-MM-dd": o günün akşam özeti gösterildi
     private DateTime _sonMolaUyari = DateTime.MinValue;
     private bool _yorgun;                                   // mola hatırlatıldı, henüz ara verilmedi
     private string _sapkaGunu = "";                         // şapka hesabı günde bir
@@ -715,21 +716,21 @@ public partial class MainWindow : Window
     }
     // ---------- Günün özeti ve ruh hâli ----------
 
-    private void OzetGoster(bool otomatik)
+    private void OzetGoster(bool otomatik, bool haftalik = false)
     {
-        string metin = _ozet.Ozet();
-        _ozetGosterildi = DateTime.Today.ToString("yyyy-MM-dd");
-        _claude.BaglamEkle("Kullanıcının bugünkü özeti:\n" + metin);
-        SoruBaslik.Text = "Günün özeti";
+        string metin = haftalik ? _ozet.HaftalikOzet() : _ozet.Ozet();
+        if (!haftalik) _ozetGosterildi = DateTime.Today.ToString("yyyy-MM-dd");
+        _claude.BaglamEkle((haftalik ? "Kullanıcının son 7 gün özeti:\n" : "Kullanıcının bugünkü özeti:\n") + metin);
+        SoruBaslik.Text = haftalik ? "Haftalık Rapor" : "Günün özeti";
         SoruCevap.Text = metin;
         SoruDurum.Text = "yerel veri · Claude'a bu özet hakkında soru sorabilirsin";
         SoruCevapKaydir.Visibility = Visibility.Visible; SoruAltSatir.Visibility = Visibility.Visible;
         SoruIpucu.Text = "Özet hakkında sor… Enter gönderir";
         if (otomatik)
-            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Günün özeti hazır", metin.Split('\n')[0], Simge: "", SaniyeOverride: 6));
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, haftalik ? "Haftalık rapor hazır" : "Günün özeti hazır", metin.Split('\n')[0], Simge: "", SaniyeOverride: 6));
         _soruGoster = true; _soruSonKullanim = DateTime.Now;
         if (_genis || !otomatik) { _genis = true; _daraltGecikme.Stop(); Genislet(); }
-        Gunluk("ozet gosterildi: " + metin.Replace("\n", " | "));
+        Gunluk((haftalik ? "haftalik" : "ozet") + " gosterildi: " + metin.Replace("\n", " | "));
     }
 
     /// Saniyede bir: özet verisi, akşam özeti saati, mola hatırlatma, uykulu gözler, özel gün şapkası
@@ -738,8 +739,12 @@ public partial class MainWindow : Window
         _ozet.Tik(OnPlanSurecAdi(), _durum.VarMi && _durum.Oynuyor, _toplanti);
 
         string bugun = DateTime.Today.ToString("yyyy-MM-dd");
-        if (_ayar.OzetAcik && _ozetGosterildi != bugun && DateTime.Now.ToString("HH:mm") == _ayar.OzetSaat && !_mini)
-            OzetGoster(otomatik: true);
+        if (_ayar.OzetAcik && DateTime.Now.ToString("HH:mm") == _ayar.OzetSaat && !_mini)
+        {
+            string yilHafta = System.Globalization.ISOWeek.GetYear(DateTime.Now) + "-" + System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Now);
+            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday && _haftaGosterildi != yilHafta) { _haftaGosterildi = yilHafta; OzetGoster(otomatik: true, haftalik: true); }
+            else if (_ozetGosterildi != bugun) OzetGoster(otomatik: true);
+        }
 
         // Mola: kesintisiz MolaDakika boyunca başındaysa bir kez hatırlat; 3 dk ara verince sıfırlanır
         if (_ayar.MolaDakika > 0)
@@ -1981,6 +1986,9 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             var ozetOge = new MenuItem { Header = "Günün özeti" };
             ozetOge.Click += (_, _) => OzetGoster(otomatik: false);
             sorMenu.Items.Add(ozetOge);
+            var haftaOge = new MenuItem { Header = "Haftalık rapor" };
+            haftaOge.Click += (_, _) => OzetGoster(otomatik: false, haftalik: true);
+            sorMenu.Items.Add(haftaOge);
             sorDugme.ContextMenu = sorMenu;
             KisayolCubugu.Children.Add(sorDugme);
         }
@@ -2716,6 +2724,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "spotify-ara": { var parca = string.Join(' ', p.Skip(1)).Split('|'); _ = _spotify.AraAsync(parca[0].Trim(), parca.Length > 1 ? parca[1].Trim() : "").ContinueWith(t => Gunluk($"spotify-ara: parca={t.Result.Parca?.Ad ?? "yok"} id={t.Result.Parca?.Id} begenildi={t.Result.Begenildi} hata={_spotify.SonHata}")); break; }
                     case "spotify-begen": { var parca = string.Join(' ', p.Skip(1)).Split('|'); _ = Task.Run(async () => { var (pp, bb) = await _spotify.AraAsync(parca[0].Trim(), parca.Length > 1 ? parca[1].Trim() : ""); if (pp == null) { Gunluk("spotify-begen: parca yok " + _spotify.SonHata); return; } bool ok1 = await _spotify.BegenAyarlaAsync(pp.Id, !bb); var (_, b2) = await _spotify.AraAsync(parca[0].Trim(), parca.Length > 1 ? parca[1].Trim() : ""); bool ok2 = await _spotify.BegenAyarlaAsync(pp.Id, bb); Gunluk($"spotify-begen: {pp.Ad} once={bb} yaz={ok1} okundu={b2} gerial={ok2} hata={_spotify.SonHata}"); }); break; }
                     case "ozet": OzetGoster(otomatik: false); break;
+                    case "hafta": OzetGoster(otomatik: false, haftalik: true); break;
                     case "tepki": KompaktCanavar.Tepki(); GenisCanavar.Tepki(); break;
                     case "uykulu": { bool u = p.Length > 1 && p[1] == "1"; _yorgun = u; KompaktCanavar.Uykulu = u; GenisCanavar.Uykulu = u; break; }
                     case "sapka": { bool sap = p.Length > 1 && p[1] == "1"; var r = sap ? Color.FromRgb(0xE0, 0x3C, 0x31) : (Color?)null; KompaktCanavar.SapkaAyarla(r, "test"); GenisCanavar.SapkaAyarla(r, "test"); break; }
