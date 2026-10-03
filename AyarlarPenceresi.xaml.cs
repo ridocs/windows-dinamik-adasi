@@ -28,6 +28,11 @@ public partial class AyarlarPenceresi : Window
         Saydamlik.Value = _ayar.Saydamlik;
         TamEkrandaGizle.IsChecked = _ayar.TamEkrandaGizle;
         OyunKatmaniAcik.IsChecked = _ayar.OyunKatmaniAcik;
+        HizliYanit.Text = _ayar.HizliYanit;
+        OyunKulaklikAd.Text = _ayar.OyunKulaklikAd;
+        OyunMuzikSeviye.Value = _ayar.OyunMuzikSeviye;
+        OyunSesProfiliAcik.IsChecked = _ayar.OyunSesProfiliAcik;
+        IzlemeModuAcik.IsChecked = _ayar.IzlemeModuAcik;
         WindowsIleBaslat.IsChecked = Baslangic.Acik;
 
         SesAcik.IsChecked = _ayar.SesAcik;
@@ -136,6 +141,7 @@ public partial class AyarlarPenceresi : Window
         DuyuruMetin.Text = $"{(int)DuyuruSaniye.Value}";
         UykuMetin.Text = $"{(int)UykuDakika.Value}";
         MolaMetin.Text = (int)MolaDakika.Value == 0 ? "kapalı" : $"{(int)MolaDakika.Value}";
+        OyunMuzikMetin.Text = $"{(int)OyunMuzikSeviye.Value}";
     }
 
     private void Kaydet_Click(object sender, RoutedEventArgs e)
@@ -146,6 +152,11 @@ public partial class AyarlarPenceresi : Window
         _ayar.Saydamlik = Math.Round(Saydamlik.Value, 2);
         _ayar.TamEkrandaGizle = TamEkrandaGizle.IsChecked == true;
         _ayar.OyunKatmaniAcik = OyunKatmaniAcik.IsChecked == true;
+        _ayar.HizliYanit = HizliYanit.Text.Trim();
+        _ayar.OyunKulaklikAd = OyunKulaklikAd.Text.Trim();
+        _ayar.OyunMuzikSeviye = (int)OyunMuzikSeviye.Value;
+        _ayar.OyunSesProfiliAcik = OyunSesProfiliAcik.IsChecked == true;
+        _ayar.IzlemeModuAcik = IzlemeModuAcik.IsChecked == true;
         _ayar.WindowsIleBaslat = WindowsIleBaslat.IsChecked == true;
 
         _ayar.SesAcik = SesAcik.IsChecked == true;

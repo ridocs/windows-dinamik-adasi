@@ -65,7 +65,7 @@
 
                     <!-- Sütun 1: haznede dosya var (ataç + sayı) -->
                     <StackPanel x:Name="KompaktHazne" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="12" Text="&#xE723;" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                        <Path Data="M9.5,3.5 L4.6,8.4 A2.4,2.4 0 0 0 8,11.8 L12.6,7.2 A3.8,3.8 0 0 0 7.2,1.8 L2.8,6.2" Stroke="{StaticResource Vurgu}" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="15" Height="15" Stretch="Uniform" VerticalAlignment="Center"/>
                         <TextBlock x:Name="KompaktHazneSayi" FontSize="11.5" FontWeight="SemiBold" Margin="5,0,0,0" VerticalAlignment="Center" Foreground="{StaticResource MetinBirincil}" Text="1"/>
                     </StackPanel>
 

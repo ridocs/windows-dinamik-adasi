@@ -9,6 +9,8 @@ namespace DinamikAda.Servisler;
 /// Saniyede bir Tik(); dakikada bir %AppData%\DinamikAda\gunluk\YYYY-MM-DD.json. Boşta (3 dk giriş yok) süre sayılmaz.
 public sealed class OzetServisi
 {
+    public sealed class Izleme { public string Baslik { get; set; } = ""; public int Dakika { get; set; } public string Saat { get; set; } = ""; }
+
     public sealed class Gun
     {
         public string Tarih { get; set; } = "";
@@ -19,6 +21,9 @@ public sealed class OzetServisi
         public int Toplanti { get; set; }
         public int Pomodoro { get; set; }
         public int Yukleme { get; set; }
+        public int Oyun { get; set; }         // saniye
+        public int GpuTepe { get; set; } = -1;
+        public List<Izleme> Izlemeler { get; set; } = new();
         public int MesajWa { get; set; }
         public int MesajDiger { get; set; }
         public int IlkDakika { get; set; } = -1;   // günün ilk etkinliği (dakika)
@@ -65,6 +70,9 @@ public sealed class OzetServisi
         _kirli = true;
         if ((DateTime.Now - _sonKayit).TotalSeconds >= 60) Kaydet();
     }
+
+    public void OyunEkle(int saniye, int gpuTepe, string ad) { Bugun.Oyun += saniye; if (gpuTepe > Bugun.GpuTepe) Bugun.GpuTepe = gpuTepe; _kirli = true; }
+    public void IzlemeEkle(string baslik, int dakika) { var v = Bugun.Izlemeler.FirstOrDefault(x => x.Baslik == baslik); if (v != null) v.Dakika += dakika; else Bugun.Izlemeler.Add(new Izleme { Baslik = baslik, Dakika = dakika, Saat = DateTime.Now.ToString("HH:mm") }); _kirli = true; }
 
     public void Say(string tur)
     {
@@ -125,7 +133,9 @@ public sealed class OzetServisi
         if (g.Toplanti >= 60) diger.Add("toplantı " + Sure(g.Toplanti));
         if (g.Pomodoro > 0) diger.Add($"pomodoro {g.Pomodoro}");
         if (g.Yukleme > 0) diger.Add($"yükleme {g.Yukleme}");
+        if (g.Oyun >= 60) diger.Add("oyun " + Sure(g.Oyun) + (g.GpuTepe >= 0 ? $" (GPU tepe {g.GpuTepe}°)" : ""));
         if (diger.Count > 0) sb.AppendLine(string.Join(" · ", diger));
+        if (g.Izlemeler.Count > 0) sb.AppendLine("İzlenen: " + string.Join(" · ", g.Izlemeler.OrderByDescending(x => x.Dakika).Take(3).Select(x => $"{x.Baslik} ({x.Dakika} dk)")));
         return sb.ToString().TrimEnd();
     }
 

@@ -41,6 +41,21 @@ public partial class MainWindow : Window
     private readonly SozServisi _soz = new();               // şarkı sözleri (lrclib)
     private readonly GpuServisi _gpu = new();               // oyun katmanı: GPU sıcaklık/yük
     private readonly ClaudeServisi _claude = new();         // Claude'a sor
+    // Oyun oturumu, ses profili, izleme modu
+    private DateTime _oyunBaslangic = DateTime.MinValue;
+    private int _oyunGpuTepe = -1;
+    private string _oyunSurec = "";
+    private float _oyunMuzikEski = -1f;                                  // Spotify sesi (profil geri alınsın)
+    private readonly List<KarisimServisi.Oturum> _oyunYonlendirilen = new();
+    private DateTime _videoBaslangic = DateTime.MinValue;
+    private string _videoBaslik = "";
+    private bool _sesSeridi;                                             // tam ekran videoda ses değişince 2 sn şerit
+    private readonly DispatcherTimer _sesSeridiZaman = new() { Interval = TimeSpan.FromMilliseconds(2200) };
+    [DllImport("kernel32.dll")] private static extern uint SetThreadExecutionState(uint esFlags);
+    private const uint ES_CONTINUOUS = 0x80000000, ES_DISPLAY_REQUIRED = 0x00000002;
+    private bool _videoAktif;
+    private string _sesSeridiMetin = "";
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
     private readonly KarisimServisi _karisim = new();       // uygulama başına ses ve çıkış aygıtı
     private readonly System.Collections.ObjectModel.ObservableCollection<KarisimServisi.Oturum> _karisimListe = new();
     private readonly DispatcherTimer _karisimZaman = new() { Interval = TimeSpan.FromSeconds(2) };
@@ -147,7 +162,7 @@ public partial class MainWindow : Window
         _kuyruk.Suzgec = d =>
         {
             // Oyun / tam ekran: bildirim ve bilgi duyuruları gösterilmez (okunmamış rozeti şeritte kalır); yalnız gerçek uyarılar geçer
-            if ((_mini || _onPlanTamEkran) && d.Tur != DuyuruTuru.Uyari && d.Anahtar != "mik") return false;
+            if ((_mini || _onPlanTamEkran) && d.Tur != DuyuruTuru.Uyari && d.Anahtar != "mik" && d.Anahtar != "hizli") return false;
             if (!_toplanti) return true;
             if (d.Anahtar == "mik" || d.Baslik.StartsWith("Toplantı", StringComparison.Ordinal)) return true;
             if (d.Tur == DuyuruTuru.Uyari && d.Anahtar != "kam") return true;   // pil azaldı, hata gibi
@@ -177,6 +192,7 @@ public partial class MainWindow : Window
         HaznePanel.GeriIstendi += () => { _hazneGoster = false; _hazneSonEkleme = DateTime.MinValue; Genislet(); };
         HaznePanel.TelefonaIstendi += () => _ = HazneTelefonaAsync();
         _ozet.Yukle();
+        _sesSeridiZaman.Tick += (_, _) => { _sesSeridiZaman.Stop(); _sesSeridi = false; if (_onPlanTamEkran && !_mini && _ayar.TamEkrandaGizle) { _tamEkranGizli = true; Ada.Visibility = Visibility.Hidden; } else if (!_genis) Daralt(animasyonlu: false); };
         _indirme.Indirildi += yol => Dispatcher.BeginInvoke(() => IndirmeTamamlandi(yol));
         if (_ayar.IndirmeIzleAcik && _indirme.Baslat()) Gunluk("indirme izleniyor: " + _indirme.Klasor);
         KarisimListe.ItemsSource = _karisimListe;
@@ -368,7 +384,7 @@ public partial class MainWindow : Window
         KompaktPil.Text = pil; GenisPil.Text = pil; GenisBosPil.Text = pil;
 
         _pomodoro.Tik();
-        if ((_mini || _testMini) && MiniKatman.Visibility == Visibility.Visible) { if (_testMini) _gpu.Tik(); MiniGuncelle(); }
+        if ((_mini || _testMini || _sesSeridi) && MiniKatman.Visibility == Visibility.Visible) { if (_testMini) _gpu.Tik(); MiniGuncelle(); }
 
         if (_durum.VarMi)
         {
@@ -444,6 +460,131 @@ public partial class MainWindow : Window
         string boyutMetin = boyut >= 1 << 20 ? $"{boyut / 1048576.0:0.0} MB" : $"{Math.Max(1, boyut / 1024)} KB";
         _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "İndirme tamamlandı", $"{System.IO.Path.GetFileName(yol)} · {boyutMetin} · haznede", Simge: "", SaniyeOverride: 5));
         Gunluk($"indirme: {yol} {boyut}");
+    }
+
+    // ---------- Oyun oturumu, ses profili, izleme modu ----------
+
+    /// Oyun katmanı açıldı / kapandı: oturum süresi ve GPU tepe, ses profili
+    private void OyunDurumDegisti(bool basladi)
+    {
+        if (basladi)
+        {
+            _oyunBaslangic = DateTime.Now; _oyunGpuTepe = -1; _oyunSurec = OnPlanSurecAdi();
+            if (_ayar.OyunSesProfiliAcik) OyunSesProfili(true);
+            return;
+        }
+        if (_oyunBaslangic == DateTime.MinValue) return;
+        var sure = DateTime.Now - _oyunBaslangic;
+        _oyunBaslangic = DateTime.MinValue;
+        if (_ayar.OyunSesProfiliAcik) OyunSesProfili(false);
+        if (sure.TotalMinutes < 1) return;
+        _ozet.OyunEkle((int)sure.TotalSeconds, _oyunGpuTepe, OzetServisi.UygulamaAdi(_oyunSurec));
+        string gpu = _oyunGpuTepe >= 0 ? $" · GPU tepe {_oyunGpuTepe}°" : "";
+        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, $"Oyun bitti: {OzetServisi.Sure((int)sure.TotalSeconds)}", $"{OzetServisi.UygulamaAdi(_oyunSurec)}{gpu} · bugün toplam {OzetServisi.Sure(_ozet.Bugun.Oyun)}", Simge: "", SaniyeOverride: 6));
+        Gunluk($"oyun oturumu: {_oyunSurec} {sure.TotalMinutes:0} dk gpu tepe {_oyunGpuTepe}");
+    }
+
+    /// Oyun ve Discord kulaklığa, müzik kısık; çıkınca geri
+    private void OyunSesProfili(bool basla)
+    {
+        try
+        {
+            var oturumlar = _karisim.Oturumlar();
+            if (basla)
+            {
+                _oyunYonlendirilen.Clear(); _oyunMuzikEski = -1f;
+                string kulaklik = _ayar.OyunKulaklikAd.Trim();
+                var aygit = kulaklik.Length > 0 ? _karisim.Aygitlar().FirstOrDefault(a => a.Ad.Contains(kulaklik, StringComparison.OrdinalIgnoreCase)) : null;
+                foreach (var o in oturumlar)
+                {
+                    bool oyunOturumu = o.Surec.Equals(_oyunSurec, StringComparison.OrdinalIgnoreCase);
+                    bool discord = o.Surec.Equals("Discord", StringComparison.OrdinalIgnoreCase);
+                    bool muzik = o.Surec.Equals("Spotify", StringComparison.OrdinalIgnoreCase);
+                    if ((oyunOturumu || discord) && aygit != null && !o.Kalici && !o.AygitId.Equals(aygit.Id, StringComparison.OrdinalIgnoreCase))
+                    { if (_karisim.Yonlendir(o, aygit.Id)) _oyunYonlendirilen.Add(o); }
+                    if (muzik) { _oyunMuzikEski = o.Seviye; _karisim.SeviyeAyarla(o, _ayar.OyunMuzikSeviye / 100f); }
+                }
+                if (_oyunYonlendirilen.Count > 0 || _oyunMuzikEski >= 0)
+                    Gunluk($"oyun ses profili: yonlendirilen={string.Join(",", _oyunYonlendirilen.Select(o => o.Surec))} muzik={_oyunMuzikEski}");
+            }
+            else
+            {
+                foreach (var o in _oyunYonlendirilen) _karisim.Yonlendir(o, null);
+                _oyunYonlendirilen.Clear();
+                if (_oyunMuzikEski >= 0)
+                {
+                    var sp = oturumlar.FirstOrDefault(o => o.Surec.Equals("Spotify", StringComparison.OrdinalIgnoreCase));
+                    if (sp != null) _karisim.SeviyeAyarla(sp, _oyunMuzikEski);
+                    _oyunMuzikEski = -1f;
+                }
+            }
+        }
+        catch (Exception e) { Gunluk("oyun ses profili hatasi: " + e.Message); }
+    }
+
+    /// Tam ekran video (tarayıcı / oynatıcı) başladı / bitti: ekran uyumasın, kaldığın yer
+    private void IzlemeDurumDegisti(bool basladi)
+    {
+        if (!_ayar.IzlemeModuAcik) return;
+        if (basladi)
+        {
+            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
+            _videoBaslangic = DateTime.Now; _videoBaslik = BaslikTemizle(OnPlanBaslik());
+            return;
+        }
+        SetThreadExecutionState(ES_CONTINUOUS);
+        if (_videoBaslangic == DateTime.MinValue) return;
+        var sure = DateTime.Now - _videoBaslangic; _videoBaslangic = DateTime.MinValue;
+        if (sure.TotalMinutes < 2 || _videoBaslik.Length == 0) return;
+        _ozet.IzlemeEkle(_videoBaslik, (int)sure.TotalMinutes);
+        _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Kaldığın yer", $"{_videoBaslik} · {OzetServisi.Sure((int)sure.TotalSeconds)}", Simge: "", SaniyeOverride: 6));
+        Gunluk($"izleme: {_videoBaslik} {sure.TotalMinutes:0} dk");
+    }
+
+    private string OnPlanBaslik()
+    {
+        try
+        {
+            var h = GetForegroundWindow();
+            if (h == IntPtr.Zero) return "";
+            var sb = new System.Text.StringBuilder(512);
+            GetWindowText(h, sb, 512);
+            return sb.ToString();
+        }
+        catch { return ""; }
+    }
+
+    /// "Bloodhounds 2. Sezon 5. Bölüm izle | Site - Google Chrome" → "Bloodhounds 2. Sezon 5. Bölüm"
+    private static string BaslikTemizle(string b)
+    {
+        foreach (var son in new[] { " - Google Chrome", " - Microsoft Edge", " — Mozilla Firefox", " - Mozilla Firefox", " - Brave", " - Opera", " - VLC media player", " - Netflix" })
+            if (b.EndsWith(son, StringComparison.OrdinalIgnoreCase)) b = b[..^son.Length];
+        int i = b.LastIndexOf(" | ", StringComparison.Ordinal); if (i > 0) b = b[..i];
+        b = System.Text.RegularExpressions.Regex.Replace(b, @"\s+(izle|full izle|türkçe dublaj|türkçe altyazı)\s*$", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase).Trim();
+        return b.Length > 70 ? b[..70] + "…" : b;
+    }
+
+    /// Tam ekran video gizliyken ses değişince 2 sn ince şerit
+    private void SesSeridiGoster()
+    {
+        if (!_ayar.IzlemeModuAcik || _mini) return;
+        _sesSeridi = true;
+        if (_tamEkranGizli) Ada.Visibility = Visibility.Visible;
+        if (!_genis) Daralt(animasyonlu: false);
+        _sesSeridiZaman.Stop(); _sesSeridiZaman.Start();
+    }
+
+    /// Oyunda Ctrl+Alt+Y: son WhatsApp mesajına hazır cevap
+    private async Task HizliYanitGonderAsync()
+    {
+        var b = _okunmamis.FirstOrDefault(x => x.Uygulama.Contains("WhatsApp", StringComparison.OrdinalIgnoreCase) || x.Aumid.Contains("WhatsApp", StringComparison.OrdinalIgnoreCase));
+        if (b == null || _wa is not { Hazir: true } || string.IsNullOrWhiteSpace(_ayar.HizliYanit)) return;
+        var s = await _wa.GonderAsync(RehberNumara(b.Baslik), b.Baslik, _ayar.HizliYanit, _waJid.GetValueOrDefault(b.Baslik));
+        _kuyruk.Ekle(s.Ok
+            ? new Duyuru(DuyuruTuru.Basari, "Hazır cevap gitti", b.Baslik, Simge: "", SaniyeOverride: 3, Anahtar: "hizli")
+            : new Duyuru(DuyuruTuru.Uyari, "Hazır cevap gönderilemedi", s.Mesaj, Simge: "", SaniyeOverride: 4, Anahtar: "hizli"));
+        if (s.Ok) { _okunmamis.Clear(); KompaktBildirimGuncelle(); if (_mini) MiniGuncelle(); }
+        Gunluk($"hizli yanit: {b.Baslik} ok={s.Ok} {s.Mesaj}");
     }
 
     // ---------- Ses karışımı ----------
@@ -739,7 +880,7 @@ public partial class MainWindow : Window
 
     private void MiniGuncelle()
     {
-        MiniSaat.Text = DateTime.Now.ToString("HH:mm");
+        MiniSaat.Text = _sesSeridi ? _sesSeridiMetin : DateTime.Now.ToString("HH:mm");
         MiniCpu.Text = _sistem.CpuYuzde.ToString();
         MiniRam.Text = _sistem.RamYuzde.ToString();
         MiniGpuKutu.Visibility = _gpu.Var && _gpu.Sicaklik >= 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -945,11 +1086,14 @@ public partial class MainWindow : Window
             if (oyun != _mini)
             {
                 _mini = oyun;
+                OyunDurumDegisti(oyun);
                 Gunluk($"oyun katmani: {(oyun ? "acik" : "kapali")} surec={OnPlanSurecAdi()}");
                 if (oyun && _tamEkranGizli) { _tamEkranGizli = false; Ada.Visibility = Visibility.Visible; }
                 if (!_genis && _aktifDuyuru == null) Daralt();
             }
-            if (_mini) _gpu.Tik();
+            if (_mini) { _gpu.Tik(); if (_gpu.Sicaklik > _oyunGpuTepe) _oyunGpuTepe = _gpu.Sicaklik; }
+            bool video = _onPlanTamEkran && !_mini;
+            if (video != _videoAktif) { _videoAktif = video; IzlemeDurumDegisti(video); }
             bool gizle = _onPlanTamEkran && !_mini;
             if (_ayar.TamEkrandaGizle && gizle != _tamEkranGizli)
             {
@@ -977,6 +1121,7 @@ public partial class MainWindow : Window
     private void SesDegisti(float seviye, bool sessiz)
     {
         BosSes.Guncelle(seviye, sessiz);
+        if (_tamEkranGizli && !_mini) { _sesSeridiMetin = (sessiz ? "sessiz" : $"ses %{(int)Math.Round(seviye * 100)}"); SesSeridiGoster(); return; }   // tam ekran video: kısa şerit
         if (_genis && GenisMedya.Visibility == Visibility.Visible)
         {
             // Medya paneli açık: duyuru yerine kısa süreli rozet (ses çubuğu kaldırıldı)
@@ -1656,7 +1801,7 @@ public partial class MainWindow : Window
         if (hazneSayi > 0)
         {
             var icerik = new StackPanel { Orientation = Orientation.Horizontal };
-            icerik.Children.Add(new TextBlock { Text = "", FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 13, Foreground = (Brush)FindResource("Vurgu"), VerticalAlignment = VerticalAlignment.Center });
+            icerik.Children.Add(new System.Windows.Shapes.Path { Data = Geometry.Parse("M9.5,3.5 L4.6,8.4 A2.4,2.4 0 0 0 8,11.8 L12.6,7.2 A3.8,3.8 0 0 0 7.2,1.8 L2.8,6.2"), Stroke = (Brush)FindResource("Vurgu"), StrokeThickness = 1.9, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round, StrokeLineJoin = PenLineJoin.Round, Width = 15, Height = 15, Stretch = Stretch.Uniform, VerticalAlignment = VerticalAlignment.Center });
             icerik.Children.Add(new TextBlock { Text = hazneSayi.ToString(), FontSize = 11.5, FontWeight = FontWeights.SemiBold, Margin = new Thickness(5, 0, 0, 0), Foreground = (Brush)FindResource("MetinBirincil"), VerticalAlignment = VerticalAlignment.Center });
             var hazneDugme = new Button
             {
@@ -2261,7 +2406,7 @@ public partial class MainWindow : Window
         if (_bildirimGoruldu) { _bildirimGoruldu = false; _okunmamis.Clear(); }   // fare çekildi: okundu
         if (_aktifDuyuru == null && _kuyruk.Sayi > 0) { SonrakiDuyuru(); return; }
 
-        if (_mini || _testMini)
+        if (_mini || _testMini || _sesSeridi)
         {
             // Oyun katmanı: ince şerit (saat, CPU, GPU, RAM, okunmamış rozeti)
             MiniGuncelle();
@@ -2502,6 +2647,11 @@ public partial class MainWindow : Window
         if (nCode >= 0 && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN))
         {
             int vk = Marshal.ReadInt32(lParam);   // KBDLLHOOKSTRUCT.vkCode
+            if (vk == 0x59 && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0 && (GetAsyncKeyState(0x12) & 0x8000) != 0 && _mini && _okunmamis.Count > 0)
+            {
+                Dispatcher.BeginInvoke(() => _ = HizliYanitGonderAsync());   // oyunda Ctrl+Alt+Y: hazır cevap
+                return (IntPtr)1;
+            }
             if (vk == VK_V && (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0 && (Ada.IsMouseOver || _genis) && Ada.Visibility == Visibility.Visible)
             {
                 Dispatcher.BeginInvoke(() =>

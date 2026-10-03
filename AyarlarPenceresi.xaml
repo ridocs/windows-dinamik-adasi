@@ -318,6 +318,31 @@
                     </Border>
                     <Border Style="{StaticResource KartStil}">
                         <StackPanel>
+                            <TextBlock Style="{StaticResource KartBaslik}" Text="Oyun ve izleme"/>
+                            <TextBlock Style="{StaticResource Aciklama}" Text="Tam ekran oyunda: ince şeritte mesaj rozeti, Ctrl+Alt+Y ile son WhatsApp mesajına hazır cevap, oyun ve Discord sesi kulaklığa, müzik kısık; çıkınca oturum özeti (süre, GPU tepe sıcaklığı). Tam ekran videoda: bildirimler sessiz, ekran uyumaz, ses değişince kısa şerit, bitince kaldığın yer."/>
+                            <Grid Style="{StaticResource Satirlar}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="52"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Hazır cevap (Ctrl+Alt+Y)"/>
+                                <TextBox x:Name="HizliYanit" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Oyunda kulaklık"/>
+                                <TextBox x:Name="OyunKulaklikAd" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" ToolTip="Ses aygıtı adının bir parçası (örnek: Headphones). Boşsa yönlendirme yapılmaz."/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="2" Text="Oyunda müzik sesi (%)"/>
+                                <Slider x:Name="OyunMuzikSeviye" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="5" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="OyunMuzikMetin" Grid.Row="2" Grid.Column="2" TextAlignment="Right" Text="30"/>
+                            </Grid>
+                            <CheckBox x:Name="OyunSesProfiliAcik" Content="Oyun ses profili (kulaklığa yönlendir, müziği kıs)" Margin="0,8,0,0"/>
+                            <CheckBox x:Name="IzlemeModuAcik" Content="İzleme modu (tam ekran videoda ekran uyumaz, kaldığın yer notu)"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource KartStil}">
+                        <StackPanel>
                             <TextBlock Style="{StaticResource KartBaslik}" Text="Günün özeti"/>
                             <TextBlock Style="{StaticResource Aciklama}" Text="Akşam belirlenen saatte kapsül günü özetler: en çok kullanılan uygulamalar ve süreleri, gelen mesajlar, müzik ve toplantı süresi, pomodoro ve yüklemeler. Claude düğmesine sağ tıklayarak istediğin an da açabilirsin. Veri yalnız bu bilgisayarda tutulur."/>
                             <CheckBox x:Name="OzetAcik" Content="Akşam özetini göster"/>
