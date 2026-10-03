@@ -437,20 +437,38 @@ public partial class MainWindow : Window
         if (sender is Button b && b.Tag is KarisimServisi.Oturum o) _karisim.SessizAyarla(o, !o.Sessiz);
     }
 
-    /// Aygıt adına tıkla: listede sıradaki aygıt; sondan sonra sistem varsayılanı
+    /// Aygıt adına tıkla: menüde tüm çıkış aygıtları ve "Sistem varsayılanı"; geçerli olan işaretli
     private void KarisimAygit_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button b || b.Tag is not KarisimServisi.Oturum o) return;
         var aygitlar = _karisim.Aygitlar();
         if (aygitlar.Count == 0) return;
         string? kaliciId = o.Pidler.Count > 0 ? AudioPolicyConfig.Oku(o.Pidler[0]) : null;
-        string simdikiId = kaliciId ?? o.AygitId;
-        int i = aygitlar.FindIndex(a => a.Id.Equals(simdikiId, StringComparison.OrdinalIgnoreCase));
-        string? hedefId; string hedefAd;
-        if (i >= 0 && i + 1 < aygitlar.Count) { hedefId = aygitlar[i + 1].Id; hedefAd = aygitlar[i + 1].Kisa; }
-        else if (kaliciId != null) { hedefId = null; hedefAd = "sistem varsayılanı"; }
-        else { hedefId = aygitlar[0].Id; hedefAd = aygitlar[0].Kisa; }
-        if (hedefId != null && hedefId.Equals(simdikiId, StringComparison.OrdinalIgnoreCase) && aygitlar.Count > 1) { hedefId = aygitlar[(i + 1) % aygitlar.Count].Id; hedefAd = aygitlar[(i + 1) % aygitlar.Count].Kisa; }
+        string varsayilanId = _karisim.VarsayilanAygitId;
+
+        var menu = new ContextMenu { PlacementTarget = b.IsLoaded ? b : KarisimListe, Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom };
+        menu.Items.Add(new MenuItem { Header = $"{o.Ad} sesini şuradan çal:", IsEnabled = false, FontWeight = FontWeights.SemiBold });
+        foreach (var a in aygitlar)
+        {
+            var oge = new MenuItem
+            {
+                Header = a.Ad + (a.Id == varsayilanId ? "  (sistem varsayılanı)" : ""),
+                IsCheckable = true,
+                IsChecked = kaliciId != null ? a.Id.Equals(kaliciId, StringComparison.OrdinalIgnoreCase) : a.Id.Equals(o.AygitId, StringComparison.OrdinalIgnoreCase),
+            };
+            var secilen = a;
+            oge.Click += (_, _) => KarisimYonlendir(o, secilen.Id, secilen.Kisa);
+            menu.Items.Add(oge);
+        }
+        menu.Items.Add(new Separator());
+        var vars = new MenuItem { Header = "Sistem varsayılanını izle", IsCheckable = true, IsChecked = kaliciId == null, ToolTip = "Özel atama kaldırılır; Windows'un varsayılan aygıtı neyse oradan çalar" };
+        vars.Click += (_, _) => KarisimYonlendir(o, null, "sistem varsayılanı");
+        menu.Items.Add(vars);
+        menu.IsOpen = true;
+    }
+
+    private void KarisimYonlendir(KarisimServisi.Oturum o, string? hedefId, string hedefAd)
+    {
         bool ok = _karisim.Yonlendir(o, hedefId);
         Gunluk($"karisim yonlendir: {o.Surec} pid={string.Join(",", o.Pidler)} -> {hedefAd} ok={ok} {_karisim.SonHata}");
         _kuyruk.Ekle(ok
@@ -2433,6 +2451,7 @@ public partial class MainWindow : Window
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
+                    case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }
                     case "karisim-liste": { KarisimYenile(); foreach (var o in _karisimListe) Gunluk($"karisim: {o.Surec} ({o.Ad}) pid={string.Join(",", o.Pidler)} aygit={o.AygitKisa} kalici={o.Kalici} ses={o.Yuzde} sessiz={o.Sessiz}"); foreach (var a in _karisim.Aygitlar()) Gunluk($"karisim aygit: {a.Kisa} | {a.Ad} | {a.Id}"); break; }
                     case "karisim-yonlendir": { var q = string.Join(' ', p.Skip(1)).Split('|'); KarisimYenile(); var o = _karisimListe.FirstOrDefault(x => x.Surec.Equals(q[0].Trim(), StringComparison.OrdinalIgnoreCase)); if (o == null) { Gunluk("karisim: oturum yok " + q[0]); break; } string? id = q.Length > 1 && !q[1].Trim().Equals("varsayilan", StringComparison.OrdinalIgnoreCase) ? _karisim.Aygitlar().FirstOrDefault(a => a.Ad.Contains(q[1].Trim(), StringComparison.OrdinalIgnoreCase))?.Id : null; bool ok = _karisim.Yonlendir(o, id); Gunluk($"karisim-yonlendir: {o.Surec} -> {id ?? "varsayilan"} ok={ok} hata={_karisim.SonHata} okunan={AudioPolicyConfig.Oku(o.Pidler[0]) ?? "yok"}"); break; }
                     case "spotify-ham": { string yol = string.Join(' ', p.Skip(1)); _ = _spotify.HamAsync(yol).ContinueWith(t => Gunluk($"spotify-ham {yol} -> {t.Result}")); break; }

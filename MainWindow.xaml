@@ -463,7 +463,7 @@
                             </StackPanel>
                             <Button Style="{StaticResource SimgeDugme}" HorizontalAlignment="Right" Width="26" Height="26" FontSize="11" Content="&#xE711;" ToolTip="Kapat" Click="KarisimKapat_Click"/>
                         </Grid>
-                        <TextBlock FontSize="10.5" Foreground="{StaticResource MetinIkincil}" Margin="0,4,0,8" TextWrapping="Wrap" Text="Aygıt adına tıkla: sıradaki hoparlöre geçer (sonra sistem varsayılanı). Kaydırıcı yalnız o uygulamanın sesi."/>
+                        <TextBlock FontSize="10.5" Foreground="{StaticResource MetinIkincil}" Margin="0,4,0,8" TextWrapping="Wrap" Text="Aygıt adına tıkla: hoparlör listesinden seç. Kaydırıcı yalnız o uygulamanın sesi."/>
                         <ItemsControl x:Name="KarisimListe">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
