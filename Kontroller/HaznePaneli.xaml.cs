@@ -41,6 +41,7 @@ public partial class HaznePaneli : UserControl
         GorunumAyarla(gorunum);
     }
 
+    public string Gorunum => _gorunum;
     public void GorunumAyarla(string gorunum)
     {
         _gorunum = gorunum == "izgara" ? "izgara" : "liste";

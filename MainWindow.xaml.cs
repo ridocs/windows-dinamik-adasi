@@ -204,7 +204,7 @@ public partial class MainWindow : Window
         _fareBekleZaman.Tick += (_, _) => { _fareBekleZaman.Stop(); if (!Ada.IsMouseOver && _genis) { _daraltGecikme.Stop(); _daraltGecikme.Start(); } };
         KompaktCanavar.MouseLeftButtonDown += (_, e) => { KompaktCanavar.Tepki(); e.Handled = true; };
         GenisCanavar.MouseLeftButtonDown += (_, e) => { GenisCanavar.Tepki(); e.Handled = true; };
-        HaznePanel.GorunumDegisti += g => { _ayar.HazneGorunum = g; try { _ayar.Kaydet(); } catch { } };
+        HaznePanel.GorunumDegisti += g => { _ayar.HazneGorunum = g; try { _ayar.Kaydet(); } catch { } if (_genis && GenisHazne.Visibility == Visibility.Visible) Genislet(); };
         HaznePanel.ClaudeIstendi += () =>
         {
             string metin = ClaudeServisi.DosyaMetni(_hazne.Ogeler.Select(o => o.Yol));
@@ -2683,6 +2683,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "hazne-link": _ = HazneYukle(null, link: true); break;
                     case "hazne-yukle": _ = HazneYukle(null, link: false); break;
                     case "hazne-goster": _hazneGoster = true; _genis = true; Genislet(); break;
+                    case "hazne-gorunum": { HaznePanel.GorunumAyarla(p.Length > 1 ? p[1] : "liste"); _ayar.HazneGorunum = HaznePanel.Gorunum; if (_genis && GenisHazne.Visibility == Visibility.Visible) Genislet(); break; }
                     case "kisayol-ekle": KisayolEkleDialog(); break;
                     case "toplanti": GizlilikUygula(p.Length > 1 && p[1] == "1", false); break;
                     case "rehber": RehberIceAktar(string.Join(' ', p.Skip(1))); break;

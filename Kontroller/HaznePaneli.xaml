@@ -92,12 +92,12 @@
 
         <Border Height="1" Background="#12FFFFFF" Margin="0,10,0,0"/>
         <WrapPanel HorizontalAlignment="Center" Margin="0,10,0,0">
-            <Button x:Name="ClaudeDugme" Style="{StaticResource AltDugme}" Margin="4,0,4,0" Tag="&#xE8F2;" Content="Claude" Click="Claude_Click" ToolTip="Haznedeki metin dosyalarını Claude'a özetlet"/>
-            <Button x:Name="TelefonDugme" Style="{StaticResource AltDugme}" Margin="4,0,4,0" Tag="&#xE8EA;" Content="Telefona" Click="Telefon_Click" ToolTip="Haznedekileri WhatsApp köprüsüyle kendi numarana gönder"/>
-            <Button x:Name="ZipDugme" Style="{StaticResource AltDugme}" Margin="4,0,4,0" Tag="&#xE7B8;" Content="Zip" Click="Zip_Click" ToolTip="Haznedekileri masaüstünde tek zip'e topla"/>
-            <Button x:Name="LinkDugme" Style="{StaticResource AltDugme}" Margin="4,0,4,0" Tag="&#xE71B;" Content="Link" Click="Link_Click" ToolTip="Hepsini herkese açık klasöre yükle, linkleri panoya kopyala"/>
-            <Button x:Name="YukleDugme" Style="{StaticResource AltDugme}" Margin="4,0,4,0" Tag="&#xE898;" Content="Yükle" Click="Yukle_Click" ToolTip="Hepsini sunucuya yükle"/>
-            <Button x:Name="TemizleDugme" Style="{StaticResource AltDugme}" Margin="4,0,4,0" Tag="&#xE74D;" Content="Temizle" Click="Temizle_Click" ToolTip="Hazneyi boşalt (dosyalar diskte kalır)"/>
+            <Button x:Name="ClaudeDugme" Style="{StaticResource AltDugme}" Margin="4,3,4,3" Tag="&#xE8F2;" Content="Claude" Click="Claude_Click" ToolTip="Haznedeki metin dosyalarını Claude'a özetlet"/>
+            <Button x:Name="TelefonDugme" Style="{StaticResource AltDugme}" Margin="4,3,4,3" Tag="&#xE8EA;" Content="Telefona" Click="Telefon_Click" ToolTip="Haznedekileri WhatsApp köprüsüyle kendi numarana gönder"/>
+            <Button x:Name="ZipDugme" Style="{StaticResource AltDugme}" Margin="4,3,4,3" Tag="&#xE7B8;" Content="Zip" Click="Zip_Click" ToolTip="Haznedekileri masaüstünde tek zip'e topla"/>
+            <Button x:Name="LinkDugme" Style="{StaticResource AltDugme}" Margin="4,3,4,3" Tag="&#xE71B;" Content="Link" Click="Link_Click" ToolTip="Hepsini herkese açık klasöre yükle, linkleri panoya kopyala"/>
+            <Button x:Name="YukleDugme" Style="{StaticResource AltDugme}" Margin="4,3,4,3" Tag="&#xE898;" Content="Yükle" Click="Yukle_Click" ToolTip="Hepsini sunucuya yükle"/>
+            <Button x:Name="TemizleDugme" Style="{StaticResource AltDugme}" Margin="4,3,4,3" Tag="&#xE74D;" Content="Temizle" Click="Temizle_Click" ToolTip="Hazneyi boşalt (dosyalar diskte kalır)"/>
         </WrapPanel>
         <TextBlock x:Name="Ipucu" FontSize="9.5" Foreground="#6E6E78" TextAlignment="Center" Text="Ctrl+V yapıştırır · sürükle: taşır · Ctrl: kopyalar · Alt: kısayol" HorizontalAlignment="Center" Margin="0,8,0,0"/>
     </StackPanel>
