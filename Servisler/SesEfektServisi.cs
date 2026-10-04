@@ -45,7 +45,7 @@ public sealed class SesEfektServisi : IDisposable
             Efekt.Basari  => (587.0, 587.0, 230, 0.0,   880.0, 2.0),   // D5+A5 ding
             Efekt.Hata    => (190.0, 150.0, 240, 0.08,  0.0,   2.3),   // alçak buzz
             Efekt.Tik     => (430.0, 430.0, 55,  0.0,   0.0,   7.0),   // kısa tok tık
-            Efekt.Ac      => (520.0, 940.0, 140, 0.0,   0.0,   3.2),
+            Efekt.Ac      => (400.0, 640.0, 170, 0.0,   0.0,   3.8),   // yumuşak yükseliş
             Efekt.Kapan   => (940.0, 460.0, 140, 0.0,   0.0,   3.2),
             _             => (500.0, 500.0, 60,  0.0,   0.0,   6.0),
         };
@@ -65,9 +65,11 @@ public sealed class SesEfektServisi : IDisposable
                 s = Math.Sin(faz);
             s += 0.4 * Math.Sin(Math.PI * f * sn);    // bir oktav alt (sub) → tokluk
             if (ikinci > 0) s += 0.6 * Math.Sin(2 * Math.PI * ikinci * sn);
-            double atak = Math.Min(1, t / 0.012);     // ~12 ms yumuşak giriş
+            double atakSn = e == Efekt.Ac ? 0.035 : 0.012;
+            double atak = Math.Min(1, t / atakSn);   // Ac: daha yavaş, yumuşak giriş
             double env = Math.Exp(-sonum * t);
-            örnek[i] = (float)(s * atak * env * seviye * 0.55);
+            double kis = e == Efekt.Ac ? 0.7 : 1.0;   // fare giriş sesi biraz daha kısık
+            örnek[i] = (float)(s * atak * env * seviye * 0.55 * kis);
         }
         var bayt = new byte[n * 4];
         Buffer.BlockCopy(örnek, 0, bayt, 0, bayt.Length);
