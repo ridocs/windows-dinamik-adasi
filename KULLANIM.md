@@ -36,6 +36,7 @@ Spotify, tarayıcı, Media Player gibi ses çalan her uygulamayı tanır.
 - **Aygıt adına tıklayın:** Açılan menüden hoparlör seçersiniz; "Sistem varsayılanını izle" ile özel atama kaldırılır.
 - **Kaydırıcı:** Yalnız o uygulamanın sesini değiştirir.
 - Windows'un "Uygulama ses ve cihaz tercihleri" sayfasına gitmeden yapılır.
+- **Tüm aygıtlarda çal:** Panelin üstündeki "Tüm aygıtlarda çal" düğmesine basınca varsayılan aygıttaki ses, bağlı diğer tüm çıkış aygıtlarından (örneğin A24, A27 V2 ve HS 420) aynı anda çıkar. Bir odada hepsi birden çalar; farklı odalardaki hoparlörleri aynı şarkıyla doldurmak için idealdir. Küçük bir gecikme olabilir. Bir kez açtığınızda kapsül yeniden başladığında da açık kalır; aynı düğmeyle kapatırsınız.
 
 ---
 

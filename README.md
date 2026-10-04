@@ -26,6 +26,7 @@ Kişisel kullanım için geliştirildi, topluluğa açıldı. Türkçe arayüz, 
 **Boş panel**
 - Büyük saat, tarih, CPU / RAM / sunucu (SRV) halkaları, ağ hızı, Tailscale durumu, ses çubuğu.
 - Ses karışımı: uygulama başına ses seviyesi, sessiz ve çıkış aygıtı (örneğin iki monitörün hoparlörleri arasında yönlendirme), Windows'un "Uygulama ses ve cihaz tercihleri" sayfasına gerek kalmadan.
+- Tüm aygıtlarda çal: varsayılan aygıttaki sesi bağlı tüm çıkış aygıtlarından (hoparlörler, kulaklık) aynı anda çalar; ses karışımı panelindeki tek düğmeyle açılıp kapanır.
 - Kısayol çubuğu: kurulu uygulamalardan seçilen simgeler, sürükle-bırak ile düzenleme.
 - Claude'a sor: kapsülün içinde soru, seçili metni özetle / çevir, panoyu özetle. Yanıtı masaüstüne profesyonel .md ya da yazdırılabilir .html olarak kaydetme. "not: ..." ile masaüstü not dosyasına, "hatırlat: 14:30 ..." ile zamanlı hatırlatıcı. API anahtarı yoksa makinedeki Claude Code CLI kullanılır.
 - Günün özeti: akşam belirlenen saatte uygulama süreleri, mesajlar, müzik ve toplantı süresi; pazar akşamı haftalık rapor.

@@ -61,6 +61,7 @@ public partial class MainWindow : Window
     private string _sesSeridiMetin = "";
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
     private readonly KarisimServisi _karisim = new();       // uygulama başına ses ve çıkış aygıtı
+    private readonly SesCogaltServisi _coklu = new();        // sesi tum aktif cikis aygitlarindan ayni anda calma (loopback kopya)
     private readonly SesOsdServisi _sesOsd = new();         // Windows ses barını gizle
     private readonly DispatcherTimer _osdZaman = new() { Interval = TimeSpan.FromMilliseconds(60) };
     private int _osdSayac;
@@ -235,6 +236,10 @@ public partial class MainWindow : Window
         try { await _medya.BaslatAsync(); } catch { }
         try { await _bildirim.BaslatAsync(); } catch { }
         _ = _hava.TikAsync(_ayar.HavaSehir);
+
+        // Tüm aygıtlarda çalma en son açık bırakıldıysa geri yükle
+        if (_ayar.CokluCikisAcik)
+            try { int n = _coklu.Baslat(); Gunluk($"coklu: baslangic n={n} durum={_coklu.Durum}"); CokluDurumGuncelle(); } catch { }
     }
 
     // ---------- Ayarlar ----------
@@ -604,8 +609,42 @@ public partial class MainWindow : Window
 
     // ---------- Ses karışımı ----------
 
-    private void KarisimAc_Click(object sender, RoutedEventArgs e) { _karisimGoster = true; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); Genislet(); }
+    private void KarisimAc_Click(object sender, RoutedEventArgs e) { _karisimGoster = true; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); Genislet(); CokluDurumGuncelle(); }
     private void KarisimKapat_Click(object sender, RoutedEventArgs e) { _karisimGoster = false; _karisimZaman.Stop(); if (_genis) Genislet(); }
+
+    // ---- tüm aygıtlarda aynı anda çalma ----
+    private void CokluCikis_Click(object sender, RoutedEventArgs e)
+    {
+        if (_coklu.Aktif)
+        {
+            _coklu.Durdur();
+            _ayar.CokluCikisAcik = false; _ayar.Kaydet();
+            _efekt?.Cal(SesEfektServisi.Efekt.Kapan);
+            Gunluk("coklu: durdu");
+        }
+        else
+        {
+            int n = _coklu.Baslat();
+            _ayar.CokluCikisAcik = n > 0; _ayar.Kaydet();
+            _efekt?.Cal(n > 0 ? SesEfektServisi.Efekt.Basari : SesEfektServisi.Efekt.Hata);
+            if (n > 0)
+                _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Tüm aygıtlarda çalıyor", $"ses {n} ek aygıttan birlikte çıkıyor", Simge: "", SaniyeOverride: 3, Anahtar: "coklu"));
+            else
+                _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "Ek aygıt yok", _coklu.Durum.Length > 0 ? _coklu.Durum : "başka aktif çıkış aygıtı bulunamadı", Simge: "", SaniyeOverride: 4, Anahtar: "coklu"));
+            Gunluk($"coklu: baslat n={n} durum={_coklu.Durum}");
+        }
+        CokluDurumGuncelle();
+    }
+
+    private void CokluDurumGuncelle()
+    {
+        if (CokluDugme == null) return;
+        CokluDugme.Content = _coklu.Aktif ? "Açık" : "Kapalı";
+        CokluDugme.Tag = ((char)(_coklu.Aktif ? 0xE73E : 0xE767)).ToString();   // açıkken tik, kapalıyken hoparlör
+        CokluDurum.Text = _coklu.Aktif
+            ? $"Ses {_coklu.Durum} üzerinden varsayılan aygıtla birlikte çıkıyor. Küçük bir gecikme olabilir."
+            : "Varsayılan aygıttaki ses diğer hoparlör ve kulaklıklardan da birlikte çıkar.";
+    }
 
     /// Oturum listesini servisten tazele; satır nesnelerini koru ki kaydırıcı sıçramasın
     private void KarisimYenile(bool yenidenBoyutla = false)
@@ -2772,6 +2811,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
+                    case "coklu": { if (p.Length > 1 && p[1] == "0") { _coklu.Durdur(); } else { int n = _coklu.Baslat(); Gunluk($"coklu baslat: n={n}"); } Gunluk($"coklu: aktif={_coklu.Aktif} durum={_coklu.Durum}"); CokluDurumGuncelle(); break; }
                     case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }
                     case "menu-kapat": if (_sonMenu != null) _sonMenu.IsOpen = false; break;
                     case "karisim-liste": { KarisimYenile(); foreach (var o in _karisimListe) Gunluk($"karisim: {o.Surec} ({o.Ad}) pid={string.Join(",", o.Pidler)} aygit={o.AygitKisa} kalici={o.Kalici} ses={o.Yuzde} sessiz={o.Sessiz}"); foreach (var a in _karisim.Aygitlar()) Gunluk($"karisim aygit: {a.Kisa} | {a.Ad} | {a.Id}"); break; }
@@ -2840,6 +2880,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         _tik.Stop(); _saniye.Stop();
         if (_klavyeKancasi != IntPtr.Zero) { UnhookWindowsHookEx(_klavyeKancasi); _klavyeKancasi = IntPtr.Zero; }
         try { _wa?.Dispose(); } catch { }
+        try { _coklu.Dispose(); } catch { }
         try { _ses.Dispose(); } catch { }
         Close();
     }
