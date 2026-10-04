@@ -44,6 +44,8 @@ public partial class AyarlarPenceresi : Window
         ToplantiModuAcik.IsChecked = _ayar.ToplantiModuAcik;
         AgAcik.IsChecked = _ayar.AgAcik;
         SesOsdGizle.IsChecked = _ayar.SesOsdGizle;
+        SesEfektleriAcik.IsChecked = _ayar.SesEfektleriAcik;
+        SesEfektSeviye.Value = _ayar.SesEfektSeviye;
         IndirmeIzleAcik.IsChecked = _ayar.IndirmeIzleAcik;
         TelefondanHazneyeAcik.IsChecked = _ayar.TelefondanHazneyeAcik;
         SozlerAcik.IsChecked = _ayar.SozlerAcik;
@@ -139,6 +141,7 @@ public partial class AyarlarPenceresi : Window
         OlcekMetin.Text = Olcek.Value.ToString("0.00");
         SaydamlikMetin.Text = $"{(int)Math.Round(Saydamlik.Value * 100)}%";
         PomodoroMetin.Text = $"{(int)PomodoroDakika.Value}";
+        SesEfektMetin.Text = $"{(int)SesEfektSeviye.Value}";
         DuyuruMetin.Text = $"{(int)DuyuruSaniye.Value}";
         UykuMetin.Text = $"{(int)UykuDakika.Value}";
         MolaMetin.Text = (int)MolaDakika.Value == 0 ? "kapalı" : $"{(int)MolaDakika.Value}";
@@ -169,6 +172,8 @@ public partial class AyarlarPenceresi : Window
         _ayar.ToplantiModuAcik = ToplantiModuAcik.IsChecked == true;
         _ayar.AgAcik = AgAcik.IsChecked == true;
         _ayar.SesOsdGizle = SesOsdGizle.IsChecked == true;
+        _ayar.SesEfektleriAcik = SesEfektleriAcik.IsChecked == true;
+        _ayar.SesEfektSeviye = (int)SesEfektSeviye.Value;
         _ayar.IndirmeIzleAcik = IndirmeIzleAcik.IsChecked == true;
         _ayar.TelefondanHazneyeAcik = TelefondanHazneyeAcik.IsChecked == true;
         _ayar.SozlerAcik = SozlerAcik.IsChecked == true;

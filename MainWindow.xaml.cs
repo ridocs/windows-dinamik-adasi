@@ -41,6 +41,7 @@ public partial class MainWindow : Window
     private readonly SozServisi _soz = new();               // şarkı sözleri (lrclib)
     private readonly GpuServisi _gpu = new();               // oyun katmanı: GPU sıcaklık/yük
     private readonly ClaudeServisi _claude = new();         // Claude'a sor
+    private readonly SesEfektServisi _efekt = new();        // arayüz ses efektleri
     // Oyun oturumu, ses profili, izleme modu
     private DateTime _oyunBaslangic = DateTime.MinValue;
     private int _oyunGpuTepe = -1;
@@ -251,6 +252,7 @@ public partial class MainWindow : Window
         KisayollariKur();
         _spotify.Ayarla(yeni.SpotifyClientId, yeni.SpotifyRefreshToken);
         _claude.Ayarla(yeni.ClaudeApiKey, yeni.ClaudeModel, yeni.ClaudeNot);
+        _efekt.Acik = yeni.SesEfektleriAcik; _efekt.Seviye = yeni.SesEfektSeviye / 100f;
         if (ilk) _spotify.YenilemeDegisti += yeniAnahtar => Dispatcher.BeginInvoke(() => { _ayar.SpotifyRefreshToken = yeniAnahtar; try { _ayar.Kaydet(); } catch { } });
         if (!ilk) { _sonSozBaslik = ""; if (_durum.VarMi) { _ = SozYukleAsync(_durum); _ = SpotifyDurumAsync(); } else SozGorunumAyarla(false); }
         if (!yeni.TamEkrandaGizle && _tamEkranGizli) { _tamEkranGizli = false; Ada.Visibility = Visibility.Visible; }
@@ -1860,7 +1862,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         // Hazneye al; "hemen" modunda bir de sunucuya yükle
         int eklenen = 0;
         foreach (var yol in yollar) if (_hazne.Ekle(yol) != null) eklenen++;
-        if (eklenen > 0) _hazneSonEkleme = DateTime.Now;
+        if (eklenen > 0) { _hazneSonEkleme = DateTime.Now; _efekt.Cal(SesEfektServisi.Efekt.Birak); }
         if (_ayar.HazneModu == "hemen")
         {
             foreach (var yol in yollar) _ = KopyalaVeBildir(yol);
@@ -2161,6 +2163,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         string ozet = hatali == 0
             ? (link ? (linkler.Count == 1 ? linkler[0] : $"{linkler.Count} link panoda") : $"{basarili} öğe → {HedefKisa()}")
             : $"{basarili} başarılı, {hatali} hatalı";
+        if (hatali == 0) _efekt.Cal(SesEfektServisi.Efekt.Gonder);
         _kuyruk.Ekle(new Duyuru(hatali == 0 ? DuyuruTuru.Basari : DuyuruTuru.Uyari,
             link ? "Link hazır, panoya kopyalandı" : "Yükleme bitti", ozet,
             Simge: hatali == 0 ? "" : "", SaniyeOverride: 7));
@@ -2184,6 +2187,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             var s = await _wa.GonderDosyaAsync(null, null, o.Yol);
             if (s.Ok) { ok++; o.Durum = "telefona gönderildi"; } else { hata++; o.Durum = "hata: " + s.Mesaj; }
         }
+        if (hata == 0) _efekt.Cal(SesEfektServisi.Efekt.Gonder);
         _kuyruk.Ekle(new Duyuru(hata == 0 ? DuyuruTuru.Basari : DuyuruTuru.Uyari, "Telefona gönderme",
             hata == 0 ? $"{ok} dosya WhatsApp'ta 'Siz' sohbetinde" : $"{ok} gönderildi, {hata} hatalı", Simge: "", SaniyeOverride: 6));
     }
@@ -2470,6 +2474,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
 
     private void Genislet()
     {
+        _efekt.Cal(SesEfektServisi.Efekt.Ac);
         _genis = true;
         Gunluk($"genislet: okunmamis={_okunmamis.Count} medya={_durum.VarMi}");
 
@@ -2567,6 +2572,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
 
     private void Daralt(bool animasyonlu = true)
     {
+        _efekt.Cal(SesEfektServisi.Efekt.Kapan);
         _genis = false;
         if (_odakSerbest) CevapKapat();   // odak izni geri alınsın
         if (_soruGoster && !_soruBekliyor && DateTime.Now - _soruSonKullanim > TimeSpan.FromSeconds(90)) _soruGoster = false;   // uzun süre kullanılmadıysa paneli unut
@@ -2720,6 +2726,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
                     case "sor-kaydet": SoruKaydet_Click(this, new RoutedEventArgs()); break;
+                    case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
                     case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }

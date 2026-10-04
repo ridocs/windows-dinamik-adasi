@@ -374,6 +374,7 @@
                                 <CheckBox x:Name="ToplantiModuAcik" Content="Toplantı modu (mikrofon açıkken sessiz)"/>
                                 <CheckBox x:Name="AgAcik" Content="Ağ hızı ve Tailscale (boş panel)"/>
                                 <CheckBox x:Name="SesOsdGizle" Content="Windows ses barını gizle (kapsül zaten gösterir)"/>
+                                <CheckBox x:Name="SesEfektleriAcik" Content="Arayüz ses efektleri (aç/kapa, taşı, gönder)"/>
                                 <CheckBox x:Name="IndirmeIzleAcik" Content="İndirilenleri izle: biten indirme hazneye"/>
                                 <CheckBox x:Name="TelefondanHazneyeAcik" Content="Telefondan: WhatsApp'ta kendine attıkların hazneye"/>
                             </UniformGrid>
@@ -390,13 +391,16 @@
                                     <ColumnDefinition Width="52"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition/><RowDefinition/>
+                                    <RowDefinition/><RowDefinition/><RowDefinition/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Style="{StaticResource Etiket}" Grid.Row="0" Text="Hava için şehir"/>
                                 <TextBox x:Name="HavaSehir" Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"/>
                                 <TextBlock Style="{StaticResource Etiket}" Grid.Row="1" Text="Pomodoro (dk)"/>
                                 <Slider x:Name="PomodoroDakika" Grid.Row="1" Grid.Column="1" Minimum="5" Maximum="90" TickFrequency="5" ValueChanged="Deger_Degisti"/>
                                 <TextBlock x:Name="PomodoroMetin" Grid.Row="1" Grid.Column="2" TextAlignment="Right" Text="25"/>
+                                <TextBlock Style="{StaticResource Etiket}" Grid.Row="2" Text="Ses efekti düzeyi"/>
+                                <Slider x:Name="SesEfektSeviye" Grid.Row="2" Grid.Column="1" Minimum="0" Maximum="100" TickFrequency="5" ValueChanged="Deger_Degisti"/>
+                                <TextBlock x:Name="SesEfektMetin" Grid.Row="2" Grid.Column="2" TextAlignment="Right" Text="40"/>
                             </Grid>
                         </StackPanel>
                     </Border>
