@@ -70,6 +70,7 @@ public partial class MainWindow : Window
     private readonly DispatcherTimer _karisimZaman = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _karisimGoster, _karisimYenileniyor;
     private bool _panoGoster, _qrGoster;
+    private bool _araclarGoster;
     private string _qrMetin = "";
     private readonly DispatcherTimer _sesRozetZaman = new() { Interval = TimeSpan.FromMilliseconds(1600) };   // medya panelinde ses rozeti
     private readonly OzetServisi _ozet = new();             // günün özeti + kesintisiz çalışma sayacı
@@ -723,6 +724,40 @@ public partial class MainWindow : Window
     }
 
     private void QrKapat_Click(object sender, RoutedEventArgs e) { _qrGoster = false; if (_genis) Genislet(); }
+
+    // ---------- Geliştirici araçları ----------
+    private void AraclarAc_Click(object sender, RoutedEventArgs e) { _araclarGoster = true; _panoGoster = false; _qrGoster = false; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); Genislet(); }
+    private void AraclarKapat_Click(object sender, RoutedEventArgs e) { _araclarGoster = false; if (_genis) Genislet(); }
+
+    private void Arac_Click(object sender, RoutedEventArgs e)
+    {
+        string islem = (sender as Button)?.CommandParameter as string ?? (sender as FrameworkElement)?.Tag as string ?? "";
+        string g = AraclarGiris.Text;
+        var (sonuc, ok) = islem switch
+        {
+            "b64kodla" => GelistiriciAraclari.Base64Kodla(g),
+            "b64coz"   => GelistiriciAraclari.Base64Coz(g),
+            "urlkodla" => GelistiriciAraclari.UrlKodla(g),
+            "urlcoz"   => GelistiriciAraclari.UrlCoz(g),
+            "json"     => GelistiriciAraclari.JsonDuzenle(g),
+            "sha256"   => GelistiriciAraclari.Sha256(g),
+            "md5"      => GelistiriciAraclari.Md5(g),
+            "jwt"      => GelistiriciAraclari.JwtCoz(g),
+            "epoch"    => GelistiriciAraclari.EpochCevir(g),
+            "uuid"     => GelistiriciAraclari.UuidUret(),
+            "say"      => GelistiriciAraclari.Say(g),
+            _          => ("", false),
+        };
+        AraclarCikti.Text = sonuc;
+        AraclarCiktiKutu.Visibility = Visibility.Visible;
+        AraclarAltSatir.Visibility = ok && sonuc.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+        AraclarCikti.Foreground = ok ? (System.Windows.Media.Brush)FindResource("MetinBirincil") : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0x9F, 0x0A));
+        _efekt?.Cal(ok ? SesEfektServisi.Efekt.Tik : SesEfektServisi.Efekt.Hata);
+        if (_genis) Genislet();   // çıktı yüksekliğine göre yeniden boyutla
+    }
+
+    private void AraclarKopyala_Click(object sender, RoutedEventArgs e) { if (AraclarCikti.Text.Length > 0 && PanoyaKopyala(AraclarCikti.Text)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", "", Simge: "", SaniyeOverride: 2, Anahtar: "pano")); } }
+    private void AraclarQr_Click(object sender, RoutedEventArgs e) { if (AraclarCikti.Text.Length > 0) QrAc(AraclarCikti.Text); }
     private void QrMetinKopyala_Click(object sender, RoutedEventArgs e) { if (PanoyaKopyala(_qrMetin)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", _qrMetin.Length > 60 ? _qrMetin[..60] + "…" : _qrMetin, Simge: "", SaniyeOverride: 2, Anahtar: "pano")); } }
 
     /// Oturum listesini servisten tazele; satır nesnelerini koru ki kaydırıcı sıçramasın
@@ -2688,6 +2723,20 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             return;
         }
 
+        // Geliştirici araçları paneli
+        if (_araclarGoster)
+        {
+            GenisAraclar.Visibility = Visibility.Visible;
+            GenisAraclar.Height = double.NaN;
+            GenisAraclar.UpdateLayout();
+            GenisAraclar.Measure(new Size(430, double.PositiveInfinity));
+            double ya = Math.Clamp(GenisAraclar.DesiredSize.Height + 2, 120, 500);
+            GenisAraclar.Height = ya - 2;
+            Gecis(GenisAraclar, 430, ya, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
+            Ada.CornerRadius = new CornerRadius(26);
+            return;
+        }
+
         // Pano geçmişi paneli
         if (_panoGoster)
         {
@@ -2814,7 +2863,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
     /// Hedef paneli görünür yapar, diğerlerini soldurur, kapsülü yeni boyuta taşır.
     private void Gecis(UIElement hedef, double genislik, double yukseklik, IEasingFunction ease, int ms)
     {
-        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim, GenisAltyazi, GenisPano, GenisQrKod })
+        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim, GenisAltyazi, GenisPano, GenisQrKod, GenisAraclar })
         {
             if (ReferenceEquals(p, hedef)) continue;
             p.IsHitTestVisible = false;
@@ -2922,6 +2971,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
+                    case "arac": { AraclarAc_Click(this, new RoutedEventArgs()); if (p.Length > 2) { AraclarGiris.Text = string.Join(' ', p.Skip(2)); Arac_Click(new Button { Tag = p[1] }, new RoutedEventArgs()); string aracCikti = AraclarCikti.Text.Replace((char)10, '|'); Gunluk("arac " + p[1] + ": cikti='" + aracCikti + "'"); } break; }
                     case "pano": PanoAc_Click(this, new RoutedEventArgs()); Gunluk($"pano: oge={_panoGecmis.Ogeler.Count}"); break;
                     case "qr": QrAc(p.Length > 1 ? string.Join(' ', p.Skip(1)) : "https://twinshareapp.com/paylas/ornek"); Gunluk($"qr: metin uzunluk={_qrMetin.Length} resim={(QrKodResim.Source != null)}"); break;
                     case "coklu": { if (p.Length > 1 && p[1] == "0") { _coklu.Durdur(); } else { int n = _coklu.Baslat(); Gunluk($"coklu baslat: n={n}"); } Gunluk($"coklu: aktif={_coklu.Aktif} durum={_coklu.Durum}"); CokluDurumGuncelle(); break; }

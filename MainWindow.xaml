@@ -591,6 +591,51 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- ============ GENİŞ, geliştirici araçları ============ -->
+                <Grid x:Name="GenisAraclar" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="430" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="16,12,16,12">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Geliştirici araçları" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource SimgeDugme}" HorizontalAlignment="Right" Width="26" Height="26" FontSize="11" Content="&#xE711;" ToolTip="Kapat" Click="AraclarKapat_Click"/>
+                        </Grid>
+                        <Border CornerRadius="9" Background="#14FFFFFF" Margin="0,8,0,0">
+                            <TextBox x:Name="AraclarGiris" Background="Transparent" BorderThickness="0" Foreground="{StaticResource MetinBirincil}" CaretBrush="{StaticResource MetinBirincil}"
+                                     SelectionBrush="{StaticResource Vurgu}" FontSize="12" FontFamily="Cascadia Mono, Consolas" Padding="10,7" TextWrapping="Wrap" AcceptsReturn="True"
+                                     MinHeight="46" MaxHeight="90" VerticalScrollBarVisibility="Auto"/>
+                        </Border>
+                        <WrapPanel Margin="-4,8,0,0">
+                            <Button Style="{StaticResource AltDugme}" Content="Base64 kodla" CommandParameter="b64kodla" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="Base64 çöz" CommandParameter="b64coz" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="URL kodla" CommandParameter="urlkodla" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="URL çöz" CommandParameter="urlcoz" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="JSON düzenle" CommandParameter="json" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="SHA256" CommandParameter="sha256" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="MD5" CommandParameter="md5" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="JWT çöz" CommandParameter="jwt" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="Epoch" CommandParameter="epoch" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="UUID" CommandParameter="uuid" Click="Arac_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Content="Say" CommandParameter="say" Click="Arac_Click"/>
+                        </WrapPanel>
+                        <Border x:Name="AraclarCiktiKutu" CornerRadius="9" Background="#1AFFFFFF" Margin="0,8,0,0" Visibility="Collapsed">
+                            <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                                <ScrollViewer.Resources>
+                                    <Style TargetType="ScrollBar" BasedOn="{StaticResource InceKaydirma}"/>
+                                </ScrollViewer.Resources>
+                                <TextBox x:Name="AraclarCikti" IsReadOnly="True" Background="Transparent" BorderThickness="0" TextWrapping="Wrap" FontSize="12"
+                                         FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" Padding="10,7"/>
+                            </ScrollViewer>
+                        </Border>
+                        <StackPanel x:Name="AraclarAltSatir" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Visibility="Collapsed">
+                            <Button Style="{StaticResource AltDugme}" Tag="&#xE8C8;" Content="Kopyala" Click="AraclarKopyala_Click"/>
+                            <Button Style="{StaticResource AltDugme}" Tag="&#xED14;" Content="QR" Click="AraclarQr_Click" ToolTip="Sonucu telefonla oku"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
                 <!-- ============ GENİŞ, Claude'a sor ============ -->
                 <Grid x:Name="GenisSoru" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
                       Width="430" VerticalAlignment="Top" HorizontalAlignment="Left">
@@ -762,6 +807,9 @@
                                             <TextBlock x:Name="PanoRozetSayi" FontSize="8.5" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Text=""/>
                                         </Border>
                                     </Grid>
+                                    <!-- Geliştirici araçları -->
+                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE943;"
+                                            ToolTip="Geliştirici araçları: base64, JSON, hash, JWT, epoch" Click="AraclarAc_Click"/>
                                     <!-- Ses karışımı: uygulama başına seviye ve çıkış aygıtı (monitör hoparlörleri) -->
                                     <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE9E9;"
                                             ToolTip="Ses karışımı: uygulama başına ses ve çıkış aygıtı" Click="KarisimAc_Click"/>
