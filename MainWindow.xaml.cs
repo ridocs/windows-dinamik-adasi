@@ -2454,7 +2454,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         var onPlan = GetForegroundWindow();
         if (onPlan != IntPtr.Zero && onPlan != _hwnd && !_genis) _onPlanOnceki = onPlan;   // "seçiliyi özetle" bu pencereye Ctrl+C gönderir
         if (_aktifDuyuru != null) { _duyuruSuresi.Stop(); _aktifDuyuru = null; }
-        if (!_genis) { _genis = true; Genislet(); }
+        if (!_genis) { _efekt.Cal(SesEfektServisi.Efekt.Ac); _genis = true; Genislet(); }
     }
 
     // Düğmeyle açılan panel kapsülü küçültünce fare dışarıda kalabilir: hemen kapatma, kullanıcıya panele girmesi için süre tanı
@@ -2465,6 +2465,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
     private void Ada_MouseLeave(object sender, MouseEventArgs e)
     {
         _dropSonrasi = false;
+        if (_genis && !_mini && !_surukleme) _efekt.Cal(SesEfektServisi.Efekt.Kapan);
         if (_fareBekle) { _fareBekle = false; _fareBekleZaman.Stop(); _fareBekleZaman.Start(); return; }   // panel küçüldü, fare dışarıda kaldı: bekle
         _daraltGecikme.Stop();
         _daraltGecikme.Start();
