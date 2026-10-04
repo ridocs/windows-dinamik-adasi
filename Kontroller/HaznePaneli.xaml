@@ -33,6 +33,8 @@
                         <TextBlock Text="{Binding AltBilgi}" FontSize="10.5" Foreground="{StaticResource MetinIkincil}" TextTrimming="CharacterEllipsis" Margin="0,1,0,0"/>
                     </StackPanel>
                     <StackPanel x:Name="Eylemler" Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Opacity="0">
+                        <Button Style="{StaticResource KucukDugme}" Content="&#xE8F2;" ToolTip="Bu dosyayı Claude'a özetlet" Tag="{Binding}" Click="OgeClaude_Click"/>
+                        <Button Style="{StaticResource KucukDugme}" Content="&#xE8EA;" ToolTip="Bu dosyayı telefona gönder" Tag="{Binding}" Click="OgeTelefon_Click"/>
                         <Button Style="{StaticResource KucukDugme}" Content="&#xE898;" ToolTip="Sunucuya yükle" Tag="{Binding}" Click="OgeYukle_Click"/>
                         <Button Style="{StaticResource KucukDugme}" Content="&#xE71B;" ToolTip="Yükle ve linki kopyala" Tag="{Binding}" Click="OgeLink_Click"/>
                         <Button Style="{StaticResource KucukDugme}" Content="&#xE74D;" ToolTip="Hazneden çıkar" Tag="{Binding}" Click="OgeSil_Click"/>

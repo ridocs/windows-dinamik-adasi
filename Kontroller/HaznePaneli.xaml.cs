@@ -27,8 +27,8 @@ public partial class HaznePaneli : UserControl
     public event Action? PanoIstendi;
     public event Action? GeriIstendi;                   // saat / kısayol paneline dön
     public event Action<string>? GorunumDegisti;
-    public event Action? TelefonaIstendi;               // hepsini WhatsApp ile kendine gönder
-    public event Action? ClaudeIstendi;                 // metin dosyalarını Claude'a özetlet
+    public event Action<HazneOgesi?>? TelefonaIstendi;            // null: hepsi, öğe: tek dosya
+    public event Action<HazneOgesi?>? ClaudeIstendi;              // null: metin dosyalarının hepsi, öğe: tek dosya
     public event Action? Degisti;                       // içerik değişti: üst pencere boyutu yenilesin
 
     public HaznePaneli() { InitializeComponent(); Width = 380; }
@@ -76,7 +76,7 @@ public partial class HaznePaneli : UserControl
             YanCubuk.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
             YanSutun.Width = GridLength.Auto;
             AltAyrac.Visibility = AltCubuk.Visibility = Visibility.Collapsed;
-            Width = 440;
+            Width = 490;
             Kaydirici.MaxHeight = GorunurSatir * ListeSatir + 8;
         }
 
@@ -102,8 +102,10 @@ public partial class HaznePaneli : UserControl
     private void Pano_Click(object sender, RoutedEventArgs e) => PanoIstendi?.Invoke();
     private void Geri_Click(object sender, RoutedEventArgs e) => GeriIstendi?.Invoke();
     private void Gorunum_Click(object sender, RoutedEventArgs e) { GorunumAyarla(_gorunum == "izgara" ? "liste" : "izgara"); GorunumDegisti?.Invoke(_gorunum); }
-    private void Telefon_Click(object sender, RoutedEventArgs e) => TelefonaIstendi?.Invoke();
-    private void Claude_Click(object sender, RoutedEventArgs e) => ClaudeIstendi?.Invoke();
+    private void Telefon_Click(object sender, RoutedEventArgs e) => TelefonaIstendi?.Invoke(null);
+    private void OgeTelefon_Click(object sender, RoutedEventArgs e) { e.Handled = true; TelefonaIstendi?.Invoke(Oge(sender)); }
+    private void Claude_Click(object sender, RoutedEventArgs e) => ClaudeIstendi?.Invoke(null);
+    private void OgeClaude_Click(object sender, RoutedEventArgs e) { e.Handled = true; ClaudeIstendi?.Invoke(Oge(sender)); }
     private void Temizle_Click(object sender, RoutedEventArgs e) => _depo?.Temizle();
 
     // ---- hazneden dışarı sürükleme (başka pencereye bırakma) ----

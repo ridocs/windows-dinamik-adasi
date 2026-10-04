@@ -194,7 +194,7 @@ public partial class MainWindow : Window
         HaznePanel.ZipIstendi += HazneZip;
         HaznePanel.PanoIstendi += HaznePano;
         HaznePanel.GeriIstendi += () => { _hazneGoster = false; _hazneSonEkleme = DateTime.MinValue; Genislet(); };
-        HaznePanel.TelefonaIstendi += () => _ = HazneTelefonaAsync();
+        HaznePanel.TelefonaIstendi += o => _ = HazneTelefonaAsync(o);
         _ozet.Yukle();
         _hatirlatici.Yukle();
         _osdZaman.Tick += (_, _) => { _sesOsd.Bastir(); if (++_osdSayac >= 12) _osdZaman.Stop(); };
@@ -207,13 +207,15 @@ public partial class MainWindow : Window
         KompaktCanavar.MouseLeftButtonDown += (_, e) => { KompaktCanavar.Tepki(); e.Handled = true; };
         GenisCanavar.MouseLeftButtonDown += (_, e) => { GenisCanavar.Tepki(); e.Handled = true; };
         HaznePanel.GorunumDegisti += g => { _ayar.HazneGorunum = g; try { _ayar.Kaydet(); } catch { } if (_genis && GenisHazne.Visibility == Visibility.Visible) Genislet(); };
-        HaznePanel.ClaudeIstendi += () =>
+        HaznePanel.ClaudeIstendi += o =>
         {
-            string metin = ClaudeServisi.DosyaMetni(_hazne.Ogeler.Select(o => o.Yol));
-            if (metin.Length == 0) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Özetlenecek metin dosyası yok", "txt, md, csv, json, kod dosyaları okunur", Simge: "", SaniyeOverride: 4)); return; }
+            var yollar = o != null ? new[] { o.Yol } : _hazne.Ogeler.Select(x => x.Yol);
+            string metin = ClaudeServisi.DosyaMetni(yollar);
+            if (metin.Length == 0) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Özetlenecek metin dosyası yok", "txt, md, csv, json, kod dosyaları okunur", Simge: "", SaniyeOverride: 4)); return; }
             _hazneGoster = false;
             SoruPaneliAc(odakla: false);
-            _ = SoruGonderAsync("Şu dosyaları Türkçe özetle; her dosya için en çok 3 madde:\n\n" + metin, "Haznedeki dosyaları özetle");
+            _ = SoruGonderAsync((o != null ? "Şu dosyayı Türkçe özetle:" : "Şu dosyaları Türkçe özetle; her dosya için en çok 3 madde:") + "\n\n" + metin,
+                                o != null ? o.Ad + " özeti" : "Haznedeki dosyaları özetle");
         };
         HaznePanel.Degisti += () => { HazneGostergeGuncelle(); if (_genis) Genislet(); };
         HazneGostergeGuncelle();
@@ -1971,7 +1973,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             var hazneDugme = new Button
             {
                 Style = (Style)FindResource("KisayolDugme"),
-                Width = double.NaN, Padding = new Thickness(10, 0, 10, 0), Margin = new Thickness(0, 0, 12, 0),
+                Width = 38, Margin = new Thickness(0, 0, 12, 0),
                 ToolTip = "Hazne", Content = icerik,
             };
             hazneDugme.Click += (_, _) => { _hazneGoster = true; FareBekleBaslat(); Genislet(); };
@@ -2165,9 +2167,9 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
     }
 
     /// Haznedekileri WhatsApp köprüsüyle kendi numarana ("Siz" sohbeti) gönderir: telefona aktarma
-    private async Task HazneTelefonaAsync()
+    private async Task HazneTelefonaAsync(HazneOgesi? tek = null)
     {
-        var ogeler = _hazne.Ogeler.ToArray();
+        var ogeler = tek != null ? new[] { tek } : _hazne.Ogeler.ToArray();
         if (ogeler.Length == 0) return;
         if (_wa is not { Hazir: true })
         {
