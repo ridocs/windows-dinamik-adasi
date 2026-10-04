@@ -409,6 +409,22 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- ============ GENİŞ, canlı altyazı (LiveCaptions → TR) ============ -->
+                <Grid x:Name="GenisAltyazi" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="420" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="18,13,18,14">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <TextBlock Text="&#xE8C1;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Canlı altyazı" FontSize="12.5" FontWeight="SemiBold" Margin="7,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                            <TextBlock Text="EN → TR" FontSize="10" Margin="8,1,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="AltyaziTurkce" FontSize="15" FontWeight="SemiBold" LineHeight="21" TextWrapping="Wrap" MaxHeight="90" TextTrimming="CharacterEllipsis"
+                                   Foreground="{StaticResource MetinBirincil}" Text="Dinliyor…"/>
+                        <TextBlock x:Name="AltyaziOrijinal" FontSize="11" Margin="0,6,0,0" TextWrapping="Wrap" MaxHeight="44" TextTrimming="CharacterEllipsis"
+                                   Foreground="{StaticResource MetinIkincil}" Text=""/>
+                    </StackPanel>
+                </Grid>
+
                 <!-- ============ GENİŞ, ses karışımı ============ -->
                 <Grid x:Name="GenisKarisim" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
                       Width="380" VerticalAlignment="Top" HorizontalAlignment="Left">

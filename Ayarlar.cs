@@ -83,6 +83,7 @@ public sealed class Ayarlar
     public string ClaudeModel { get; set; } = "claude-sonnet-5-5";
     public string ClaudeNot { get; set; } = "";          // sistem notuna eklenir ("cevapları İngilizce ver" gibi)
     public bool SesEfektleriAcik { get; set; } = true;   // arayüz ses efektleri
+    public bool AltyaziAcik { get; set; } = true;        // Windows Canlı Altyazı'yı okuyup Türkçeye çevir
     public int SesEfektSeviye { get; set; } = 40;
 
 

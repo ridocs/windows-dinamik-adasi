@@ -42,6 +42,8 @@ public partial class MainWindow : Window
     private readonly GpuServisi _gpu = new();               // oyun katmanı: GPU sıcaklık/yük
     private readonly ClaudeServisi _claude = new();         // Claude'a sor
     private readonly SesEfektServisi _efekt = new();        // arayüz ses efektleri
+    private readonly AltyaziServisi _altyazi = new();        // canlı altyazı (LiveCaptions → TR)
+    private bool _altyaziAktifti;
     // Oyun oturumu, ses profili, izleme modu
     private DateTime _oyunBaslangic = DateTime.MinValue;
     private int _oyunGpuTepe = -1;
@@ -385,6 +387,7 @@ public partial class MainWindow : Window
 
     private void Tik()
     {
+        if (_ayar.AltyaziAcik) AltyaziTik();
         var simdi = DateTime.Now;
         string saat = simdi.ToString("HH:mm", Tr);
         KompaktSaat.Text = saat; GenisSaat.Text = saat; GenisBosSaat.Text = saat;
@@ -1039,6 +1042,32 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
 
     private const byte VK_C = 0x43;   // VK_CONTROL (int) klavye kancası bölümünde tanımlı
 
+
+    private void AltyaziTik()
+    {
+        if (!_altyazi.PencereVar())
+        {
+            if (_altyaziAktifti) { _altyaziAktifti = false; _altyazi.Oku(); if (!_genis) Daralt(); }
+            return;
+        }
+        if (_altyazi.Oku())
+        {
+            _altyaziAktifti = true;
+            _ = _altyazi.CevirAsync().ContinueWith(_ => Dispatcher.BeginInvoke(() =>
+            {
+                if (_altyazi.Turkce.Length == 0) return;
+                if (GenisAltyazi.Visibility == Visibility.Visible) AltyaziGuncelle();
+                else if (!_genis) Daralt();
+            }));
+        }
+    }
+
+    private void AltyaziGuncelle()
+    {
+        AltyaziTurkce.Text = _altyazi.Turkce.Length > 0 ? _altyazi.Turkce : "Çevriliyor…";
+        string o = _altyazi.Orijinal;
+        AltyaziOrijinal.Text = o.Length > 160 ? "…" + o[^160..] : o;
+    }
     // ---------- Oyun katmanı ----------
 
     private void MiniGuncelle()
@@ -2590,6 +2619,19 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             return;
         }
 
+        if (_ayar.AltyaziAcik && _altyazi.Aktif && _altyazi.Turkce.Length > 0 && !_mini)
+        {
+            AltyaziGuncelle();
+            GenisAltyazi.Visibility = Visibility.Visible;
+            GenisAltyazi.Height = double.NaN; GenisAltyazi.UpdateLayout();
+            GenisAltyazi.Measure(new Size(420, double.PositiveInfinity));
+            double ya = Math.Clamp(GenisAltyazi.DesiredSize.Height + 2, 72, 230);
+            GenisAltyazi.Height = ya - 2;
+            Gecis(GenisAltyazi, 420, ya, new CubicEase { EasingMode = EasingMode.EaseInOut }, animasyonlu ? 240 : 1);
+            Ada.CornerRadius = new CornerRadius(22);
+            return;
+        }
+
         KompaktIcerikGuncelle();
         KompaktBaslikGuncelle();   // söz varsa kompakt başlıkta o anki satır
         double g = KompaktGenislik();
@@ -2620,7 +2662,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
     /// Hedef paneli görünür yapar, diğerlerini soldurur, kapsülü yeni boyuta taşır.
     private void Gecis(UIElement hedef, double genislik, double yukseklik, IEasingFunction ease, int ms)
     {
-        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim })
+        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim, GenisAltyazi })
         {
             if (ReferenceEquals(p, hedef)) continue;
             p.IsHitTestVisible = false;
@@ -2723,6 +2765,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
                     case "sor-kaydet": SoruKaydet_Click(this, new RoutedEventArgs()); break;
+                    case "altyazi": { bool d = _altyazi.Oku(); _ = _altyazi.CevirAsync().ContinueWith(_ => Dispatcher.BeginInvoke(() => Gunluk($"altyazi: pencere={_altyazi.PencereVar()} aktif={_altyazi.Aktif} degisti={d} orijinal='{_altyazi.Orijinal}' turkce='{_altyazi.Turkce}'"))); break; }
                     case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
