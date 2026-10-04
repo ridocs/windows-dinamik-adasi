@@ -1,19 +1,22 @@
+using System.IO;
+using System.Text.Json;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
 
 namespace DinamikAda.Servisler;
 
-/// Varsayılan ses aygıtındaki sesi yakalar (WASAPI loopback) ve diğer aktif çıkış aygıtlarına
-/// aynı anda yazar: ses birden çok hoparlörden/kulaklıktan birlikte çıkar.
-/// Seviye eşitliği: loopback varsayılanın ana ses seviyesini zaten içerir, bu yüzden her hedef
-/// aygıtın donanım seviyesi tam açılır (1.0); böylece tüm aygıtlar varsayılanla aynı seviyede duyulur
-/// ve kullanıcı ana sesi değiştirince hepsi birlikte değişir.
-/// Senkron: tüm hedefler tek kaynaktan aynı düşük gecikmeyle beslenir ve aynı anda başlatılır;
-/// aygıt saatleri kaydıkça (clock drift) biriken gecikme sıfırlanarak sabit tutulur.
+/// Varsayilan ses aygitindaki sesi yakalar (WASAPI loopback) ve diger aktif cikis aygitlarina
+/// ayni anda yazar: ses birden cok hoparlorden/kulakliktan birlikte cikar.
+/// Seviye esitligi: loopback varsayilanin ana ses seviyesini zaten icerir, bu yuzden her hedef
+/// aygitin donanim seviyesi tam acilir (1.0); boylece tum aygitlar varsayilanla ayni seviyede duyulur.
+/// Senkron: tum hedefler tek kaynaktan ayni dusuk gecikmeyle beslenir ve ayni anda baslatilir.
+/// Thread guvenligi: hedefler degismez bir dizi (snapshot); yakalama is parcacigi yalniz o anki
+/// diziyi gezer, durdurma yeni (bos) diziyle degistirir. Cokme kurtarma: baslatinca degistirilen
+/// aygit seviyeleri diske yazilir; uygulama Durdur cagrilmadan olurse sonraki acilista geri alinir.
 public sealed class SesCogaltServisi : IDisposable
 {
-    private const int GecikmeMs = 50;          // WasapiOut tampon gecikmesi (düşük: senkron; çok düşük: ses kesilir)
-    private const double EnCokGecikmeMs = 130;  // tampon bunu aşarsa drift birikmiş demektir, senkron için sıfırlanır
+    private const int GecikmeMs = 50;
+    private const double EnCokGecikmeMs = 130;
 
     private sealed class Hedef
     {
@@ -26,36 +29,41 @@ public sealed class SesCogaltServisi : IDisposable
         public bool SeviyeDegisti;
     }
 
+    private static string KurtarmaDosyasi =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DinamikAda", "coklu-kurtarma.json");
+
     private WasapiLoopbackCapture? _yakala;
-    private readonly List<Hedef> _hedefler = new();
+    private volatile Hedef[] _hedefler = Array.Empty<Hedef>();
     private readonly MMDeviceEnumerator _enum = new();
 
     public bool Aktif { get; private set; }
     public string Durum { get; private set; } = "";
 
-    /// Çoğaltmayı başlat. Dönüş: kaç ek aygıta yazılıyor.
     public int Baslat()
     {
         Durdur();
+        var liste = new List<Hedef>();
+        var kurtarma = new Dictionary<string, float[]>();
+        MMDevice? varsayilan = null;
         try
         {
-            var varsayilan = _enum.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+            varsayilan = _enum.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
             _yakala = new WasapiLoopbackCapture(varsayilan);
-            var fmt = _yakala.WaveFormat;   // varsayılan aygıtın karışım formatı (post-volume)
+            var fmt = _yakala.WaveFormat;
 
             foreach (var d in _enum.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active))
             {
-                if (d.ID == varsayilan.ID) continue;   // varsayılan zaten kendisi çalıyor
+                if (d.ID == varsayilan.ID) { d.Dispose(); continue; }
+                IWavePlayer? cihaz = null;
+                IDisposable? ara = null;
                 try
                 {
                     var tampon = new BufferedWaveProvider(fmt) { DiscardOnBufferOverflow = true, BufferDuration = TimeSpan.FromMilliseconds(600) };
-                    IWavePlayer cihaz = new WasapiOut(d, AudioClientShareMode.Shared, true, GecikmeMs);
-                    IDisposable? ara = null;
+                    cihaz = new WasapiOut(d, AudioClientShareMode.Shared, true, GecikmeMs);
                     try { cihaz.Init(tampon); }
                     catch
                     {
-                        // Format uymadı: aygıtın karışım formatına yeniden örnekle
-                        try { cihaz.Dispose(); } catch { }
+                        cihaz.Dispose();
                         var resampler = new MediaFoundationResampler(tampon, d.AudioClient.MixFormat) { ResamplerQuality = 40 };
                         ara = resampler;
                         cihaz = new WasapiOut(d, AudioClientShareMode.Shared, true, GecikmeMs);
@@ -63,31 +71,42 @@ public sealed class SesCogaltServisi : IDisposable
                     }
 
                     var h = new Hedef { Cihaz = cihaz, Tampon = tampon, Ara = ara, Aygit = d };
-                    // Seviyeyi varsayılanla eşitle: hedef donanım sesini tam aç (loopback zaten varsayılan seviyesini taşır)
                     try
                     {
                         h.EskiSeviye = d.AudioEndpointVolume.MasterVolumeLevelScalar;
                         h.EskiSessiz = d.AudioEndpointVolume.Mute;
+                        kurtarma[d.ID] = new[] { h.EskiSeviye, h.EskiSessiz ? 1f : 0f };
                         d.AudioEndpointVolume.MasterVolumeLevelScalar = 1.0f;
                         d.AudioEndpointVolume.Mute = false;
                         h.SeviyeDegisti = true;
                     }
                     catch { }
                     try { cihaz.Volume = 1.0f; } catch { }
-                    _hedefler.Add(h);
+                    liste.Add(h);
                 }
-                catch (Exception e) { Durum = d.FriendlyName + ": " + e.Message; }
+                catch (Exception e)
+                {
+                    Durum = d.FriendlyName + ": " + e.Message;
+                    try { cihaz?.Dispose(); } catch { }
+                    try { ara?.Dispose(); } catch { }
+                    try { d.Dispose(); } catch { }
+                }
             }
 
-            if (_hedefler.Count == 0) { Durdur(); return 0; }
+            try { varsayilan.Dispose(); } catch { }
+
+            if (liste.Count == 0) { Durdur(); return 0; }
+
+            KurtarmaYaz(kurtarma);
+            _hedefler = liste.ToArray();
 
             _yakala.DataAvailable += (_, ev) =>
             {
-                foreach (var h in _hedefler)
+                var hed = _hedefler;
+                foreach (var h in hed)
                 {
                     try
                     {
-                        // Clock drift: gecikme birikmişse senkron için eski örnekleri at (küçük, seyrek bir sıçrama)
                         if (h.Tampon.BufferedDuration.TotalMilliseconds > EnCokGecikmeMs + GecikmeMs)
                             h.Tampon.ClearBuffer();
                         h.Tampon.AddSamples(ev.Buffer, 0, ev.BytesRecorded);
@@ -96,14 +115,19 @@ public sealed class SesCogaltServisi : IDisposable
                 }
             };
             _yakala.StartRecording();
-            // Tüm hedefleri aynı anda başlat: aralarında kayma olmasın
-            foreach (var h in _hedefler) { try { h.Cihaz.Play(); } catch { } }
+            foreach (var h in liste) { try { h.Cihaz.Play(); } catch { } }
 
             Aktif = true;
-            Durum = $"{_hedefler.Count} ek aygıt";
-            return _hedefler.Count;
+            Durum = liste.Count + " ek aygit";
+            return liste.Count;
         }
-        catch (Exception e) { Durum = e.Message; Durdur(); return 0; }
+        catch (Exception e)
+        {
+            Durum = e.Message;
+            try { varsayilan?.Dispose(); } catch { }
+            Durdur();
+            return 0;
+        }
     }
 
     public void Durdur()
@@ -111,19 +135,63 @@ public sealed class SesCogaltServisi : IDisposable
         try { _yakala?.StopRecording(); } catch { }
         try { _yakala?.Dispose(); } catch { }
         _yakala = null;
-        foreach (var h in _hedefler)
+
+        var eski = _hedefler;
+        _hedefler = Array.Empty<Hedef>();
+        foreach (var h in eski)
         {
             try { h.Cihaz.Stop(); } catch { }
             try { h.Cihaz.Dispose(); } catch { }
             try { h.Ara?.Dispose(); } catch { }
-            // Hedef aygıtın donanım seviyesini eski haline döndür
             if (h.SeviyeDegisti)
                 try { h.Aygit.AudioEndpointVolume.MasterVolumeLevelScalar = h.EskiSeviye; h.Aygit.AudioEndpointVolume.Mute = h.EskiSessiz; } catch { }
             try { h.Aygit.Dispose(); } catch { }
         }
-        _hedefler.Clear();
+        if (eski.Length > 0) KurtarmaSil();
         Aktif = false;
     }
 
-    public void Dispose() { Durdur(); _enum.Dispose(); }
+    private static void KurtarmaYaz(Dictionary<string, float[]> veri)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(KurtarmaDosyasi)!);
+            File.WriteAllText(KurtarmaDosyasi, JsonSerializer.Serialize(veri));
+        }
+        catch { }
+    }
+
+    private static void KurtarmaSil()
+    {
+        try { if (File.Exists(KurtarmaDosyasi)) File.Delete(KurtarmaDosyasi); } catch { }
+    }
+
+    /// Uygulama baslarken cagrilir: onceki oturum Durdur cagirmadan olduyse aygit seviyelerini geri al.
+    public static void KurtarmaGeriYukle()
+    {
+        try
+        {
+            if (!File.Exists(KurtarmaDosyasi)) return;
+            var veri = JsonSerializer.Deserialize<Dictionary<string, float[]>>(File.ReadAllText(KurtarmaDosyasi));
+            if (veri is { Count: > 0 })
+            {
+                using var en = new MMDeviceEnumerator();
+                foreach (var (id, deger) in veri)
+                {
+                    if (deger is not { Length: >= 2 }) continue;
+                    try
+                    {
+                        using var d = en.GetDevice(id);
+                        d.AudioEndpointVolume.MasterVolumeLevelScalar = Math.Clamp(deger[0], 0f, 1f);
+                        d.AudioEndpointVolume.Mute = deger[1] >= 0.5f;
+                    }
+                    catch { }
+                }
+            }
+        }
+        catch { }
+        finally { KurtarmaSil(); }
+    }
+
+    public void Dispose() { Durdur(); try { _enum.Dispose(); } catch { } }
 }

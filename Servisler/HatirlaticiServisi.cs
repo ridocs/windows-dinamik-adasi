@@ -51,7 +51,7 @@ public sealed class HatirlaticiServisi
         var now = DateTime.Now;
 
         // N dakika/saat sonra
-        var m = Regex.Match(s, @"^(\d{1,4})\s*(dk|dakika|dakka|saat|sa)\s*(sonra)?\s*", RegexOptions.IgnoreCase);
+        var m = Regex.Match(s, @"^(\d{1,4})\s*(dakika|dakka|saat|dk|sa)\b\s*(sonra)?\s*", RegexOptions.IgnoreCase);
         if (m.Success)
         {
             int n = int.Parse(m.Groups[1].Value);

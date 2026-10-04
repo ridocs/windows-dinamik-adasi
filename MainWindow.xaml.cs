@@ -243,6 +243,8 @@ public partial class MainWindow : Window
         try { await _bildirim.BaslatAsync(); } catch { }
         _ = _hava.TikAsync(_ayar.HavaSehir);
 
+        // Önceki oturum çökerek kapandıysa, çoğaltmanın değiştirdiği aygıt seviyelerini geri al
+        SesCogaltServisi.KurtarmaGeriYukle();
         // Tüm aygıtlarda çalma en son açık bırakıldıysa geri yükle
         if (_ayar.CokluCikisAcik)
             try { int n = _coklu.Baslat(); Gunluk($"coklu: baslangic n={n} durum={_coklu.Durum}"); CokluDurumGuncelle(); } catch { }
@@ -866,7 +868,7 @@ public partial class MainWindow : Window
         if (_ayar.OzetAcik && DateTime.Now.ToString("HH:mm") == _ayar.OzetSaat && !_mini)
         {
             string yilHafta = System.Globalization.ISOWeek.GetYear(DateTime.Now) + "-" + System.Globalization.ISOWeek.GetWeekOfYear(DateTime.Now);
-            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday && _haftaGosterildi != yilHafta) { _haftaGosterildi = yilHafta; OzetGoster(otomatik: true, haftalik: true); }
+            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday && _haftaGosterildi != yilHafta) { _haftaGosterildi = yilHafta; _ozetGosterildi = bugun; OzetGoster(otomatik: true, haftalik: true); }
             else if (_ozetGosterildi != bugun) OzetGoster(otomatik: true);
         }
 
@@ -947,7 +949,7 @@ public partial class MainWindow : Window
         string soru = SoruKutu.Text.Trim();
         if (soru.Length == 0 || _soruBekliyor) return;
         SoruKutu.Text = "";
-        var on = System.Text.RegularExpressions.Regex.Match(soru, @"^(not|hatırlat|hatirlat|anımsat|hatırlatma)\s*:?\s+(.+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
+        var on = System.Text.RegularExpressions.Regex.Match(soru, @"^(not|hatırlat|hatirlat|anımsat|hatırlatma)\s*:\s+(.+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase | System.Text.RegularExpressions.RegexOptions.Singleline);
         if (on.Success)
         {
             if (on.Groups[1].Value.StartsWith("not", StringComparison.OrdinalIgnoreCase)) NotKaydet(on.Groups[2].Value.Trim());
@@ -1340,7 +1342,10 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         try
         {
             foreach (var p in System.Diagnostics.Process.GetProcessesByName("Spotify"))
-                if (p.MainWindowHandle != IntPtr.Zero && p.MainWindowTitle.Length > 0) { spotify = p.MainWindowHandle; break; }
+            {
+                try { if (spotify == IntPtr.Zero && p.MainWindowHandle != IntPtr.Zero && p.MainWindowTitle.Length > 0) spotify = p.MainWindowHandle; }
+                finally { p.Dispose(); }
+            }
         }
         catch { }
         if (spotify == IntPtr.Zero)
