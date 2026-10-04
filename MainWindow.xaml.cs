@@ -62,12 +62,15 @@ public partial class MainWindow : Window
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetWindowText(IntPtr hWnd, System.Text.StringBuilder text, int count);
     private readonly KarisimServisi _karisim = new();       // uygulama başına ses ve çıkış aygıtı
     private readonly SesCogaltServisi _coklu = new();        // sesi tum aktif cikis aygitlarindan ayni anda calma (loopback kopya)
+    private readonly PanoGecmisServisi _panoGecmis = new();   // kopyalanan metinlerin gecmisi (oturum ici)
     private readonly SesOsdServisi _sesOsd = new();         // Windows ses barını gizle
     private readonly DispatcherTimer _osdZaman = new() { Interval = TimeSpan.FromMilliseconds(60) };
     private int _osdSayac;
     private readonly System.Collections.ObjectModel.ObservableCollection<KarisimServisi.Oturum> _karisimListe = new();
     private readonly DispatcherTimer _karisimZaman = new() { Interval = TimeSpan.FromSeconds(2) };
     private bool _karisimGoster, _karisimYenileniyor;
+    private bool _panoGoster, _qrGoster;
+    private string _qrMetin = "";
     private readonly DispatcherTimer _sesRozetZaman = new() { Interval = TimeSpan.FromMilliseconds(1600) };   // medya panelinde ses rozeti
     private readonly OzetServisi _ozet = new();             // günün özeti + kesintisiz çalışma sayacı
     private string _ozetGosterildi = "";
@@ -128,7 +131,7 @@ public partial class MainWindow : Window
         _varsayilanKenar = Ada.BorderBrush;
         _varsayilanDolgu = IlerlemeDolgu.Background;
 
-        SourceInitialized += (_, _) => { _hwnd = new WindowInteropHelper(this).Handle; OdakAlmaz(); };
+        SourceInitialized += (_, _) => { _hwnd = new WindowInteropHelper(this).Handle; OdakAlmaz(); PanoDinleyiciKur(); };
         Loaded += Pencere_Loaded;
         DpiChanged += (_, _) => Konumla();
 
@@ -224,6 +227,9 @@ public partial class MainWindow : Window
         };
         HaznePanel.Degisti += () => { HazneGostergeGuncelle(); if (_genis) Genislet(); };
         HazneGostergeGuncelle();
+
+        _panoGecmis.Degisti += () => Dispatcher.BeginInvoke(PanoGostergeGuncelle);
+        PanoGostergeGuncelle();
 
         try { _ses.Baslat(); BosSes.Bagla(_ses); } catch { }
 
@@ -645,6 +651,77 @@ public partial class MainWindow : Window
             ? $"Ses {_coklu.Durum} üzerinden varsayılan aygıtla birlikte çıkıyor. Küçük bir gecikme olabilir."
             : "Varsayılan aygıttaki ses diğer hoparlör ve kulaklıklardan da birlikte çıkar.";
     }
+
+    // ---------- Pano geçmişi ve QR ----------
+    private void PanoAc_Click(object sender, RoutedEventArgs e) { _panoGoster = true; _qrGoster = false; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); Genislet(); }
+    private void PanoKapat_Click(object sender, RoutedEventArgs e) { _panoGoster = false; if (_genis) Genislet(); }
+
+    private void PanoYenile()
+    {
+        PanoListe.ItemsSource = null;
+        PanoListe.ItemsSource = _panoGecmis.Ogeler;
+        int n = _panoGecmis.Ogeler.Count;
+        PanoSayac.Text = n > 0 ? n.ToString() : "";
+        PanoBos.Visibility = n == 0 ? Visibility.Visible : Visibility.Collapsed;
+        PanoTemizleDugme.IsEnabled = n > 0;
+    }
+
+    private void PanoGostergeGuncelle()
+    {
+        if (PanoRozet == null) return;
+        int n = _panoGecmis.Ogeler.Count;
+        PanoRozet.Visibility = n > 0 ? Visibility.Visible : Visibility.Collapsed;
+        PanoRozetSayi.Text = n > 99 ? "99" : n.ToString();
+        if (_panoGoster && GenisPano.Visibility == Visibility.Visible) PanoYenile();
+    }
+
+    private static PanoGecmisServisi.Oge? PanoOgesi(object sender) => (sender as FrameworkElement)?.Tag as PanoGecmisServisi.Oge;
+
+    private void PanoOge_Tik(object sender, MouseButtonEventArgs e)
+    {
+        var o = PanoOgesi(sender);
+        if (o == null) return;
+        if (PanoyaKopyala(o.Metin))
+        {
+            _efekt?.Cal(SesEfektServisi.Efekt.Tik);
+            _panoGoster = false;
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", o.Onizleme, Simge: "", SaniyeOverride: 2, Anahtar: "pano"));
+        }
+    }
+
+    private void PanoKopyala_Click(object sender, RoutedEventArgs e)
+    {
+        var o = PanoOgesi(sender); if (o == null) return;
+        if (PanoyaKopyala(o.Metin)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", o.Onizleme, Simge: "", SaniyeOverride: 2, Anahtar: "pano")); }
+    }
+
+    private void PanoQr_Click(object sender, RoutedEventArgs e) { var o = PanoOgesi(sender); if (o != null) QrAc(o.Metin); }
+    private void PanoSil_Click(object sender, RoutedEventArgs e) { var o = PanoOgesi(sender); if (o != null) { _panoGecmis.Cikar(o); PanoYenile(); PanoGostergeGuncelle(); } }
+    private void PanoTemizle_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Temizle); _panoGecmis.Temizle(); PanoYenile(); PanoGostergeGuncelle(); }
+
+    /// Panoya metin yaz (başka uygulama kilitlemişse birkaç kez dene).
+    private bool PanoyaKopyala(string metin)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            try { System.Windows.Clipboard.SetText(metin); return true; }
+            catch { System.Threading.Thread.Sleep(40); }
+        }
+        return false;
+    }
+
+    private void QrAc(string metin)
+    {
+        if (string.IsNullOrWhiteSpace(metin)) return;
+        _qrMetin = metin;
+        QrKodResim.Source = QrServisi.Uret(metin, 8);
+        QrKodMetin.Text = metin.Length > 160 ? metin[..160] + "…" : metin;
+        _qrGoster = true; _panoGoster = false; _genis = true;
+        _daraltGecikme.Stop(); FareBekleBaslat(); Genislet();
+    }
+
+    private void QrKapat_Click(object sender, RoutedEventArgs e) { _qrGoster = false; if (_genis) Genislet(); }
+    private void QrMetinKopyala_Click(object sender, RoutedEventArgs e) { if (PanoyaKopyala(_qrMetin)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", _qrMetin.Length > 60 ? _qrMetin[..60] + "…" : _qrMetin, Simge: "", SaniyeOverride: 2, Anahtar: "pano")); } }
 
     /// Oturum listesini servisten tazele; satır nesnelerini koru ki kaydırıcı sıçramasın
     private void KarisimYenile(bool yenidenBoyutla = false)
@@ -2592,6 +2669,35 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             return;
         }
 
+        // QR kodu paneli: bir metin/link için (pano ya da hazne linkinden)
+        if (_qrGoster)
+        {
+            GenisQrKod.Visibility = Visibility.Visible;
+            GenisQrKod.Height = double.NaN;
+            GenisQrKod.UpdateLayout();
+            GenisQrKod.Measure(new Size(300, double.PositiveInfinity));
+            double yq = Math.Clamp(GenisQrKod.DesiredSize.Height + 2, 120, 440);
+            GenisQrKod.Height = yq - 2;
+            Gecis(GenisQrKod, 300, yq, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
+            Ada.CornerRadius = new CornerRadius(26);
+            return;
+        }
+
+        // Pano geçmişi paneli
+        if (_panoGoster)
+        {
+            PanoYenile();
+            GenisPano.Visibility = Visibility.Visible;
+            GenisPano.Height = double.NaN;
+            GenisPano.UpdateLayout();
+            GenisPano.Measure(new Size(430, double.PositiveInfinity));
+            double yp = Math.Clamp(GenisPano.DesiredSize.Height + 2, 100, 460);
+            GenisPano.Height = yp - 2;
+            Gecis(GenisPano, 430, yp, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
+            Ada.CornerRadius = new CornerRadius(26);
+            return;
+        }
+
         // Claude'a sor paneli: düğmeyle istendiyse, yükseklik içeriğe göre
         if (_soruGoster && _ayar.ClaudeAcik)
         {
@@ -2703,7 +2809,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
     /// Hedef paneli görünür yapar, diğerlerini soldurur, kapsülü yeni boyuta taşır.
     private void Gecis(UIElement hedef, double genislik, double yukseklik, IEasingFunction ease, int ms)
     {
-        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim, GenisAltyazi })
+        foreach (var p in new UIElement[] { Kompakt, Duyuru, GenisMedya, GenisBos, GenisBildirim, GenisHazne, GenisQr, MiniKatman, GenisSoru, GenisKarisim, GenisAltyazi, GenisPano, GenisQrKod })
         {
             if (ReferenceEquals(p, hedef)) continue;
             p.IsHitTestVisible = false;
@@ -2811,6 +2917,8 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
+                    case "pano": PanoAc_Click(this, new RoutedEventArgs()); Gunluk($"pano: oge={_panoGecmis.Ogeler.Count}"); break;
+                    case "qr": QrAc(p.Length > 1 ? string.Join(' ', p.Skip(1)) : "https://twinshareapp.com/paylas/ornek"); Gunluk($"qr: metin uzunluk={_qrMetin.Length} resim={(QrKodResim.Source != null)}"); break;
                     case "coklu": { if (p.Length > 1 && p[1] == "0") { _coklu.Durdur(); } else { int n = _coklu.Baslat(); Gunluk($"coklu baslat: n={n}"); } Gunluk($"coklu: aktif={_coklu.Aktif} durum={_coklu.Durum}"); CokluDurumGuncelle(); break; }
                     case "karisim-menu": { KarisimYenile(); var ilk = _karisimListe.FirstOrDefault(); if (ilk != null) KarisimAygit_Click(new Button { Tag = ilk }, new RoutedEventArgs()); break; }
                     case "menu-kapat": if (_sonMenu != null) _sonMenu.IsOpen = false; break;
@@ -2879,10 +2987,47 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         _ozet.Kaydet();
         _tik.Stop(); _saniye.Stop();
         if (_klavyeKancasi != IntPtr.Zero) { UnhookWindowsHookEx(_klavyeKancasi); _klavyeKancasi = IntPtr.Zero; }
+        try { if (_hwnd != IntPtr.Zero) RemoveClipboardFormatListener(_hwnd); } catch { }
         try { _wa?.Dispose(); } catch { }
         try { _coklu.Dispose(); } catch { }
         try { _ses.Dispose(); } catch { }
         Close();
+    }
+
+    // ---------- Pano geçmişi: kopyalanan metinleri dinle ----------
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool AddClipboardFormatListener(IntPtr hwnd);
+    [DllImport("user32.dll", SetLastError = true)] private static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+    private const int WM_CLIPBOARDUPDATE = 0x031D;
+
+    private void PanoDinleyiciKur()
+    {
+        if (_hwnd == IntPtr.Zero) return;
+        try { AddClipboardFormatListener(_hwnd); HwndSource.FromHwnd(_hwnd)?.AddHook(PanoKancasi); } catch { }
+    }
+
+    private IntPtr PanoKancasi(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_CLIPBOARDUPDATE && _ayar.PanoGecmisAcik)
+            Dispatcher.BeginInvoke(PanoMetniniAl, System.Windows.Threading.DispatcherPriority.Background);
+        return IntPtr.Zero;
+    }
+
+    private void PanoMetniniAl()
+    {
+        // Pano başka uygulamaca kilitli olabilir: birkaç kez dene
+        for (int i = 0; i < 4; i++)
+        {
+            try
+            {
+                if (System.Windows.Clipboard.ContainsText())
+                {
+                    string m = System.Windows.Clipboard.GetText();
+                    if (!string.IsNullOrWhiteSpace(m)) { _panoGecmis.Ekle(m); PanoGostergeGuncelle(); }
+                }
+                return;
+            }
+            catch { System.Threading.Thread.Sleep(30); }
+        }
     }
 
     // ---------- Ctrl+V: fare kapsülün üstündeyken panoyu hazneye yapıştır ----------

@@ -525,6 +525,72 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- ============ GENİŞ, pano geçmişi ============ -->
+                <Grid x:Name="GenisPano" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="430" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="16,12,16,12">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Pano geçmişi" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PanoSayac" FontSize="10" Margin="8,1,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                <Button x:Name="PanoTemizleDugme" Style="{StaticResource AltDugme}" Tag="&#xE74D;" Content="Temizle" Click="PanoTemizle_Click" ToolTip="Tüm geçmişi sil"/>
+                                <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="11" Margin="6,0,0,0" Content="&#xE711;" ToolTip="Kapat" Click="PanoKapat_Click"/>
+                            </StackPanel>
+                        </Grid>
+                        <ScrollViewer x:Name="PanoKaydir" MaxHeight="300" Margin="0,8,0,0" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar" BasedOn="{StaticResource InceKaydirma}"/>
+                            </ScrollViewer.Resources>
+                            <ItemsControl x:Name="PanoListe">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#12FFFFFF" CornerRadius="8" Margin="0,0,0,6" Padding="10,7" MouseLeftButtonUp="PanoOge_Tik" Cursor="Hand" Tag="{Binding}">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <TextBlock Text="{Binding Onizleme}" FontSize="11.5" Foreground="{StaticResource MetinBirincil}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Zaman, StringFormat=HH:mm}" FontSize="9.5" Foreground="{StaticResource MetinIkincil}" Margin="0,1,0,0"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="10" Content="&#xE8C8;" Tag="{Binding}" ToolTip="Kopyala" Click="PanoKopyala_Click"/>
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="11" Content="&#xED14;" Tag="{Binding}" ToolTip="QR: telefonla oku" Click="PanoQr_Click"/>
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="10" Content="&#xE74D;" Tag="{Binding}" ToolTip="Sil" Click="PanoSil_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <TextBlock x:Name="PanoBos" FontSize="11.5" Foreground="{StaticResource MetinIkincil}" Margin="2,4,0,4" Text="Henüz kopyalanan metin yok. Bir şey kopyalayın, burada görünür." TextWrapping="Wrap" Visibility="Collapsed"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- ============ GENİŞ, QR kodu ============ -->
+                <Grid x:Name="GenisQrKod" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
+                      Width="300" VerticalAlignment="Top" HorizontalAlignment="Left">
+                    <StackPanel Margin="16,12,16,14">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="&#xED14;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Telefonla oku" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource SimgeDugme}" HorizontalAlignment="Right" Width="26" Height="26" FontSize="11" Content="&#xE711;" ToolTip="Kapat" Click="QrKapat_Click"/>
+                        </Grid>
+                        <Border Background="#F5F5F8" CornerRadius="12" Margin="0,10,0,0" Padding="12" HorizontalAlignment="Center">
+                            <Image x:Name="QrKodResim" Width="220" Height="220" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                        </Border>
+                        <TextBlock x:Name="QrKodMetin" FontSize="10.5" Foreground="{StaticResource MetinIkincil}" Margin="0,8,0,0" TextWrapping="Wrap" MaxHeight="48" TextTrimming="CharacterEllipsis" TextAlignment="Center" Text=""/>
+                        <Button Style="{StaticResource AltDugme}" HorizontalAlignment="Center" Margin="0,8,0,0" Tag="&#xE8C8;" Content="Metni kopyala" Click="QrMetinKopyala_Click"/>
+                    </StackPanel>
+                </Grid>
+
                 <!-- ============ GENİŞ, Claude'a sor ============ -->
                 <Grid x:Name="GenisSoru" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
                       Width="430" VerticalAlignment="Top" HorizontalAlignment="Left">
@@ -686,9 +752,20 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <k:SesSatiri x:Name="BosSes"/>
-                                <!-- Ses karışımı: uygulama başına seviye ve çıkış aygıtı (monitör hoparlörleri) -->
-                                <Button Grid.Column="1" Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE9E9;"
-                                        ToolTip="Ses karışımı: uygulama başına ses ve çıkış aygıtı" Click="KarisimAc_Click"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <!-- Pano geçmişi: kopyalanan son metinler -->
+                                    <Grid Margin="6,0,0,0">
+                                        <Button x:Name="PanoAcDugme" Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xE8C8;"
+                                                ToolTip="Pano geçmişi: kopyalanan metinler" Click="PanoAc_Click"/>
+                                        <Border x:Name="PanoRozet" Background="{StaticResource Vurgu}" CornerRadius="7" MinWidth="14" Height="14" Padding="3,0"
+                                                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-3,-3,0" IsHitTestVisible="False" Visibility="Collapsed">
+                                            <TextBlock x:Name="PanoRozetSayi" FontSize="8.5" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Text=""/>
+                                        </Border>
+                                    </Grid>
+                                    <!-- Ses karışımı: uygulama başına seviye ve çıkış aygıtı (monitör hoparlörleri) -->
+                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE9E9;"
+                                            ToolTip="Ses karışımı: uygulama başına ses ve çıkış aygıtı" Click="KarisimAc_Click"/>
+                                </StackPanel>
                             </Grid>
                             <!-- Kısayol çubuğu: uygulama simgeleri, kodda doldurulur -->
                             <WrapPanel x:Name="KisayolCubugu" Margin="0,12,0,6" HorizontalAlignment="Center"/>
