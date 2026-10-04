@@ -40,6 +40,17 @@ Spotify, tarayıcı, Media Player gibi ses çalan her uygulamayı tanır.
 
 ---
 
+## 3.1 Boş panel araç düğmeleri (ses çubuğunun sağında)
+
+Boş panelde ses çubuğunun sağında dört küçük düğme vardır: ekran görüntüsü, pano geçmişi, geliştirici araçları ve ses karışımı.
+
+- **Ekran görüntüsü (kamera):** Ön plandaki pencereyi yakalar (pencere küçükse tüm ekranı). Kapsül görüntüye girmez. PNG `Resimler\DinamikAda` altına kaydedilir ve hazneye eklenir. Haznedeki görüntüyü "Link" düğmesiyle sunucuya yükleyip bağlantısını alır, o bağlantıyı QR ile telefona okutabilirsiniz.
+- **Pano geçmişi:** Kopyaladığınız son metinler burada listelenir (oturum içi, en çok 30). Bir satıra tıklayınca panoya geri kopyalar. Her satırda kopyala, QR ve sil düğmeleri vardır. QR ile bir linki ya da metni telefonunuzda anında açarsınız. Ayarlardan kapatılabilir.
+- **Geliştirici araçları ({}):** Metin kutusuna bir şey yazıp ya da yapıştırıp düğmelerden birini seçin: Base64 kodla/çöz, URL kodla/çöz, JSON düzenle, SHA256, MD5, JWT çöz (başlık ve gövde), Epoch (saniye/ms ile tarih arası), UUID üret, satır/kelime/karakter say. Çıktıyı kopyalar ya da QR ile telefona gönderirsiniz.
+- **QR:** Pano ve araçlar panellerindeki QR düğmeleri "Telefonla oku" panelini açar; büyük QR kodunu telefon kamerasıyla okutursunuz.
+
+---
+
 ## 4. Mesajlar ve WhatsApp
 
 - **Windows bildirimleri:** Kapsüle düşer. Fare değmemişken son mesaj kısmen görünür; üstüne gelince tam içerik; tıklayınca uygulamada açılır.
