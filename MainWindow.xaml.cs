@@ -1313,7 +1313,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         if (_ayar.AgAcik) { _ag.Tik(); VpnDegisimDuyur(); }
         RuhHaliTik();
         HatirlaticiKontrol();
-        if (_ayar.ClaudeKodAcik && _claudeKod.Var && _saniyeSayac % 3 == 0 && _claudeKod.Tik()) _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Claude Code bekliyor", "oturum durdu; bitti ya da onayını bekliyor", Simge: "uE8F2", SaniyeOverride: 10, Anahtar: "claudekod"));
+        if (_ayar.ClaudeKodAcik && _claudeKod.Var && _saniyeSayac % 3 == 0 && _claudeKod.Tik()) _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Claude Code bekliyor", "oturum durdu; bitti ya da onayını bekliyor", Simge: "", SaniyeOverride: 10, Anahtar: "claudekod"));
         if (_genis && GenisBos.Visibility == Visibility.Visible) SistemHalkalariGuncelle();
 
         if (_hwnd != IntPtr.Zero)
@@ -2583,10 +2583,10 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             GenisKarisim.Visibility = Visibility.Visible;
             GenisKarisim.Height = double.NaN;
             GenisKarisim.UpdateLayout();
-            GenisKarisim.Measure(new Size(380, double.PositiveInfinity));
+            GenisKarisim.Measure(new Size(430, double.PositiveInfinity));
             double yk = Math.Clamp(GenisKarisim.DesiredSize.Height + 2, 100, 460);
             GenisKarisim.Height = yk - 2;
-            Gecis(GenisKarisim, 380, yk, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
+            Gecis(GenisKarisim, 430, yk, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
             Ada.CornerRadius = new CornerRadius(26);
             _karisimZaman.Start();
             return;
