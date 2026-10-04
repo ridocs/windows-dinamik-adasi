@@ -33,8 +33,10 @@ public partial class HaznePaneli : UserControl
 
     public HaznePaneli() { InitializeComponent(); Width = 380; }
 
-    public void Bagla(HazneDeposu depo, string gorunum)
+    private SesEfektServisi? _efekt;
+    public void Bagla(HazneDeposu depo, string gorunum, SesEfektServisi? efekt = null)
     {
+        _efekt = efekt;
         _depo = depo;
         Liste.ItemsSource = depo.Ogeler;
         depo.Ogeler.CollectionChanged += (_, _) => { Yenile(); Degisti?.Invoke(); };
@@ -93,20 +95,20 @@ public partial class HaznePaneli : UserControl
 
     private static HazneOgesi? Oge(object sender) => (sender as FrameworkElement)?.Tag as HazneOgesi ?? (sender as FrameworkElement)?.DataContext as HazneOgesi;
 
-    private void OgeYukle_Click(object sender, RoutedEventArgs e) { e.Handled = true; YukleIstendi?.Invoke(Oge(sender)); }
-    private void OgeLink_Click(object sender, RoutedEventArgs e) { e.Handled = true; LinkIstendi?.Invoke(Oge(sender)); }
-    private void OgeSil_Click(object sender, RoutedEventArgs e) { e.Handled = true; var o = Oge(sender); if (o != null) _depo?.Cikar(o); }
-    private void Yukle_Click(object sender, RoutedEventArgs e) => YukleIstendi?.Invoke(null);
-    private void Link_Click(object sender, RoutedEventArgs e) => LinkIstendi?.Invoke(null);
-    private void Zip_Click(object sender, RoutedEventArgs e) => ZipIstendi?.Invoke();
-    private void Pano_Click(object sender, RoutedEventArgs e) => PanoIstendi?.Invoke();
+    private void OgeYukle_Click(object sender, RoutedEventArgs e) { e.Handled = true; _efekt?.Cal(SesEfektServisi.Efekt.Gonder); YukleIstendi?.Invoke(Oge(sender)); }
+    private void OgeLink_Click(object sender, RoutedEventArgs e) { e.Handled = true; _efekt?.Cal(SesEfektServisi.Efekt.Gonder); LinkIstendi?.Invoke(Oge(sender)); }
+    private void OgeSil_Click(object sender, RoutedEventArgs e) { e.Handled = true; _efekt?.Cal(SesEfektServisi.Efekt.Tik); var o = Oge(sender); if (o != null) _depo?.Cikar(o); }
+    private void Yukle_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Gonder); YukleIstendi?.Invoke(null); }
+    private void Link_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Gonder); LinkIstendi?.Invoke(null); }
+    private void Zip_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Basari); ZipIstendi?.Invoke(); }
+    private void Pano_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Birak); PanoIstendi?.Invoke(); }
     private void Geri_Click(object sender, RoutedEventArgs e) => GeriIstendi?.Invoke();
     private void Gorunum_Click(object sender, RoutedEventArgs e) { GorunumAyarla(_gorunum == "izgara" ? "liste" : "izgara"); GorunumDegisti?.Invoke(_gorunum); }
-    private void Telefon_Click(object sender, RoutedEventArgs e) => TelefonaIstendi?.Invoke(null);
-    private void OgeTelefon_Click(object sender, RoutedEventArgs e) { e.Handled = true; TelefonaIstendi?.Invoke(Oge(sender)); }
-    private void Claude_Click(object sender, RoutedEventArgs e) => ClaudeIstendi?.Invoke(null);
-    private void OgeClaude_Click(object sender, RoutedEventArgs e) { e.Handled = true; ClaudeIstendi?.Invoke(Oge(sender)); }
-    private void Temizle_Click(object sender, RoutedEventArgs e) => _depo?.Temizle();
+    private void Telefon_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Gonder); TelefonaIstendi?.Invoke(null); }
+    private void OgeTelefon_Click(object sender, RoutedEventArgs e) { e.Handled = true; _efekt?.Cal(SesEfektServisi.Efekt.Gonder); TelefonaIstendi?.Invoke(Oge(sender)); }
+    private void Claude_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); ClaudeIstendi?.Invoke(null); }
+    private void OgeClaude_Click(object sender, RoutedEventArgs e) { e.Handled = true; _efekt?.Cal(SesEfektServisi.Efekt.Tik); ClaudeIstendi?.Invoke(Oge(sender)); }
+    private void Temizle_Click(object sender, RoutedEventArgs e) { _efekt?.Cal(SesEfektServisi.Efekt.Temizle); _depo?.Temizle(); }
 
     // ---- hazneden dışarı sürükleme (başka pencereye bırakma) ----
 

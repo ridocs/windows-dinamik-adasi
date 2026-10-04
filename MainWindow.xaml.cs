@@ -189,7 +189,7 @@ public partial class MainWindow : Window
 
         // Hazne
         _hazne.Yukle();
-        HaznePanel.Bagla(_hazne, _ayar.HazneGorunum);
+        HaznePanel.Bagla(_hazne, _ayar.HazneGorunum, _efekt);
         HaznePanel.YukleIstendi += o => _ = HazneYukle(o, link: false);
         HaznePanel.LinkIstendi += o => _ = HazneYukle(o, link: true);
         HaznePanel.ZipIstendi += HazneZip;
@@ -2163,7 +2163,6 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         string ozet = hatali == 0
             ? (link ? (linkler.Count == 1 ? linkler[0] : $"{linkler.Count} link panoda") : $"{basarili} öğe → {HedefKisa()}")
             : $"{basarili} başarılı, {hatali} hatalı";
-        if (hatali == 0) _efekt.Cal(SesEfektServisi.Efekt.Gonder);
         _kuyruk.Ekle(new Duyuru(hatali == 0 ? DuyuruTuru.Basari : DuyuruTuru.Uyari,
             link ? "Link hazır, panoya kopyalandı" : "Yükleme bitti", ozet,
             Simge: hatali == 0 ? "" : "", SaniyeOverride: 7));
@@ -2187,7 +2186,6 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             var s = await _wa.GonderDosyaAsync(null, null, o.Yol);
             if (s.Ok) { ok++; o.Durum = "telefona gönderildi"; } else { hata++; o.Durum = "hata: " + s.Mesaj; }
         }
-        if (hata == 0) _efekt.Cal(SesEfektServisi.Efekt.Gonder);
         _kuyruk.Ekle(new Duyuru(hata == 0 ? DuyuruTuru.Basari : DuyuruTuru.Uyari, "Telefona gönderme",
             hata == 0 ? $"{ok} dosya WhatsApp'ta 'Siz' sohbetinde" : $"{ok} gönderildi, {hata} hatalı", Simge: "", SaniyeOverride: 6));
     }
@@ -2474,7 +2472,6 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
 
     private void Genislet()
     {
-        _efekt.Cal(SesEfektServisi.Efekt.Ac);
         _genis = true;
         Gunluk($"genislet: okunmamis={_okunmamis.Count} medya={_durum.VarMi}");
 
@@ -2572,7 +2569,6 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
 
     private void Daralt(bool animasyonlu = true)
     {
-        _efekt.Cal(SesEfektServisi.Efekt.Kapan);
         _genis = false;
         if (_odakSerbest) CevapKapat();   // odak izni geri alınsın
         if (_soruGoster && !_soruBekliyor && DateTime.Now - _soruSonKullanim > TimeSpan.FromSeconds(90)) _soruGoster = false;   // uzun süre kullanılmadıysa paneli unut
