@@ -27,12 +27,17 @@ Kişisel kullanım için geliştirildi, topluluğa açıldı. Türkçe arayüz, 
 - Büyük saat, tarih, CPU / RAM / sunucu (SRV) halkaları, ağ hızı, Tailscale durumu, ses çubuğu.
 - Ses karışımı: uygulama başına ses seviyesi, sessiz ve çıkış aygıtı (örneğin iki monitörün hoparlörleri arasında yönlendirme), Windows'un "Uygulama ses ve cihaz tercihleri" sayfasına gerek kalmadan.
 - Kısayol çubuğu: kurulu uygulamalardan seçilen simgeler, sürükle-bırak ile düzenleme.
-- Claude'a sor: kapsülün içinde soru, seçili metni özetle / çevir, panoyu özetle. API anahtarı yoksa makinedeki Claude Code CLI kullanılır.
-- Günün özeti: akşam belirlenen saatte uygulama süreleri, mesajlar, müzik ve toplantı süresi.
+- Claude'a sor: kapsülün içinde soru, seçili metni özetle / çevir, panoyu özetle. Yanıtı masaüstüne profesyonel .md ya da yazdırılabilir .html olarak kaydetme. "not: ..." ile masaüstü not dosyasına, "hatırlat: 14:30 ..." ile zamanlı hatırlatıcı. API anahtarı yoksa makinedeki Claude Code CLI kullanılır.
+- Günün özeti: akşam belirlenen saatte uygulama süreleri, mesajlar, müzik ve toplantı süresi; pazar akşamı haftalık rapor.
 
 **Sistem**
 - Uzak sunucu sağlığı: ping, HTTP, SSH ile yük / disk / RAM; düşünce ve geri gelince duyuru.
-- Tam ekran oyunda gizlenmek yerine ince şerit (saat, CPU, GPU sıcaklığı, RAM, mesaj rozeti); tarayıcı ve video tam ekranında gizlenir.
+- Tam ekran oyunda gizlenmek yerine ince şerit (saat, CPU, GPU sıcaklığı, RAM, mikrofon/kamera, mesaj rozeti); tarayıcı ve video tam ekranında gizlenir.
+- Oyun oturum özeti (süre, GPU tepe sıcaklığı), oyun ses profili (oyun ve Discord kulaklığa, müzik kısık), oyunda son WhatsApp mesajına Ctrl+Alt+Y ile hazır cevap.
+- İzleme modu: tam ekran videoda ekran uyumaz, ses değişince kısa şerit, bitince kaldığın yer notu.
+- Canlı altyazı → Türkçe: Windows Canlı Altyazı açıkken metni okuyup kapsülde Türkçeye çevirerek gösterir (hesapsız çeviri).
+- Arayüz ses efektleri: hazne işlemlerinde (yükle, gönder, temizle) ve fare kapsüle girince/ayrılınca tok, sentezlenmiş sesler.
+- Claude Code oturum izci: bir Claude Code oturumu çalışıp durunca (bitti ya da onay bekliyor) kapsül haber verir.
 - Pil olayları, pomodoro, Windows ile başlat, ekran ve ölçek seçimi.
 
 **Maskot**
