@@ -758,6 +758,32 @@ public partial class MainWindow : Window
 
     private void AraclarKopyala_Click(object sender, RoutedEventArgs e) { if (AraclarCikti.Text.Length > 0 && PanoyaKopyala(AraclarCikti.Text)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", "", Simge: "", SaniyeOverride: 2, Anahtar: "pano")); } }
     private void AraclarQr_Click(object sender, RoutedEventArgs e) { if (AraclarCikti.Text.Length > 0) QrAc(AraclarCikti.Text); }
+
+    // ---------- Ekran görüntüsü ----------
+    private void EkranGoruntusu_Click(object sender, RoutedEventArgs e) => EkranGoruntusuAl();
+
+    private async void EkranGoruntusuAl()
+    {
+        var hedef = GetForegroundWindow();
+        if (hedef == _hwnd || hedef == IntPtr.Zero) hedef = _onPlanOnceki;
+        // Kapsül görüntüye girmesin: anlık gizle, yakala, geri getir
+        Ada.Visibility = Visibility.Hidden;
+        await Task.Delay(150);
+        string? yol = await Task.Run(() => EkranGoruntusuServisi.Yakala(hedef));
+        Ada.Visibility = Visibility.Visible;
+        if (yol != null && _hazne.Ekle(yol) != null)
+        {
+            _efekt?.Cal(SesEfektServisi.Efekt.Basari);
+            _hazneGoster = true;
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Ekran görüntüsü alındı", System.IO.Path.GetFileName(yol) + " · haznede", Simge: "", SaniyeOverride: 3, Anahtar: "ekran"));
+            if (_genis) Genislet();
+        }
+        else
+        {
+            _efekt?.Cal(SesEfektServisi.Efekt.Hata);
+            _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "Ekran görüntüsü alınamadı", "", Simge: "", SaniyeOverride: 3, Anahtar: "ekran"));
+        }
+    }
     private void QrMetinKopyala_Click(object sender, RoutedEventArgs e) { if (PanoyaKopyala(_qrMetin)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", _qrMetin.Length > 60 ? _qrMetin[..60] + "…" : _qrMetin, Simge: "", SaniyeOverride: 2, Anahtar: "pano")); } }
 
     /// Oturum listesini servisten tazele; satır nesnelerini koru ki kaydırıcı sıçramasın
@@ -2971,6 +2997,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
+                    case "ekran": EkranGoruntusuAl(); break;
                     case "arac": { AraclarAc_Click(this, new RoutedEventArgs()); if (p.Length > 2) { AraclarGiris.Text = string.Join(' ', p.Skip(2)); Arac_Click(new Button { Tag = p[1] }, new RoutedEventArgs()); string aracCikti = AraclarCikti.Text.Replace((char)10, '|'); Gunluk("arac " + p[1] + ": cikti='" + aracCikti + "'"); } break; }
                     case "pano": PanoAc_Click(this, new RoutedEventArgs()); Gunluk($"pano: oge={_panoGecmis.Ogeler.Count}"); break;
                     case "qr": QrAc(p.Length > 1 ? string.Join(' ', p.Skip(1)) : "https://twinshareapp.com/paylas/ornek"); Gunluk($"qr: metin uzunluk={_qrMetin.Length} resim={(QrKodResim.Source != null)}"); break;

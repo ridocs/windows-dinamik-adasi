@@ -798,6 +798,9 @@
                                 </Grid.ColumnDefinitions>
                                 <k:SesSatiri x:Name="BosSes"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <!-- Ekran görüntüsü: ön plan penceresi hazneye -->
+                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xE722;"
+                                            ToolTip="Ekran görüntüsü al (ön plan penceresi hazneye)" Click="EkranGoruntusu_Click"/>
                                     <!-- Pano geçmişi: kopyalanan son metinler -->
                                     <Grid Margin="6,0,0,0">
                                         <Button x:Name="PanoAcDugme" Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xE8C8;"
