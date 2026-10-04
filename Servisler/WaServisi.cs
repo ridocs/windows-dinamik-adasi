@@ -22,7 +22,6 @@ public sealed class WaServisi : IDisposable
     public bool Hazir { get; private set; }
     public bool QrVar { get; private set; }
     public string Ben { get; private set; } = "";
-    public bool SurecCalisiyor => _surec is { HasExited: false } || DisSurecVar();
 
     public WaServisi(int port)
     {
@@ -67,7 +66,8 @@ public sealed class WaServisi : IDisposable
     {
         try
         {
-            using var r = Http.Send(new HttpRequestMessage(HttpMethod.Get, Url("/durum")), HttpCompletionOption.ResponseHeadersRead);
+            using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(1200));
+            using var r = Http.Send(new HttpRequestMessage(HttpMethod.Get, Url("/durum")), HttpCompletionOption.ResponseHeadersRead, cts.Token);
             return r.IsSuccessStatusCode;
         }
         catch { return false; }

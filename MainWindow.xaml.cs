@@ -192,7 +192,7 @@ public partial class MainWindow : Window
 
         // WhatsApp Web köprüsü: arka planda gönder/al (node + wa-servis)
         _wa = new WaServisi(_ayar.WaServisPort);
-        if (_ayar.WaServisAcik) { _waBaslatildi = _wa.Baslat(); Gunluk($"wa-servis baslat: {_waBaslatildi}"); }
+        if (_ayar.WaServisAcik) { _waBaslatildi = await Task.Run(() => _wa.Baslat()); Gunluk($"wa-servis baslat: {_waBaslatildi}"); }
         try { _waLogo = (await UygulamaBilgisi.AlAsync("5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App")).Simge; } catch { }
 
         // Hazne
