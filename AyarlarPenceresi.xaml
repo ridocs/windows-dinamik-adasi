@@ -376,6 +376,7 @@
                                 <CheckBox x:Name="SesOsdGizle" Content="Windows ses barını gizle (kapsül zaten gösterir)"/>
                                 <CheckBox x:Name="SesEfektleriAcik" Content="Arayüz ses efektleri (aç/kapa, taşı, gönder)"/>
                                 <CheckBox x:Name="AltyaziAcik" Content="Canlı altyazı → Türkçe (Windows Canlı Altyazı açıkken)"/>
+                                <CheckBox x:Name="ClaudeKodAcik" Content="Claude Code oturumu durunca haber ver"/>
                                 <CheckBox x:Name="IndirmeIzleAcik" Content="İndirilenleri izle: biten indirme hazneye"/>
                                 <CheckBox x:Name="TelefondanHazneyeAcik" Content="Telefondan: WhatsApp'ta kendine attıkların hazneye"/>
                             </UniformGrid>

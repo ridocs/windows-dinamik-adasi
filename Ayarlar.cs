@@ -84,6 +84,7 @@ public sealed class Ayarlar
     public string ClaudeNot { get; set; } = "";          // sistem notuna eklenir ("cevapları İngilizce ver" gibi)
     public bool SesEfektleriAcik { get; set; } = true;   // arayüz ses efektleri
     public bool AltyaziAcik { get; set; } = true;        // Windows Canlı Altyazı'yı okuyup Türkçeye çevir
+    public bool ClaudeKodAcik { get; set; } = true;      // Claude Code oturumu durunca haber ver
     public int SesEfektSeviye { get; set; } = 40;
 
 

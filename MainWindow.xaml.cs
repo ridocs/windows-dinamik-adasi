@@ -43,6 +43,7 @@ public partial class MainWindow : Window
     private readonly ClaudeServisi _claude = new();         // Claude'a sor
     private readonly SesEfektServisi _efekt = new();        // arayüz ses efektleri
     private readonly AltyaziServisi _altyazi = new();        // canlı altyazı (LiveCaptions → TR)
+    private readonly ClaudeKodServisi _claudeKod = new();     // Claude Code oturum izci
     private bool _altyaziAktifti;
     // Oyun oturumu, ses profili, izleme modu
     private DateTime _oyunBaslangic = DateTime.MinValue;
@@ -1273,6 +1274,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
         if (_ayar.AgAcik) { _ag.Tik(); VpnDegisimDuyur(); }
         RuhHaliTik();
         HatirlaticiKontrol();
+        if (_ayar.ClaudeKodAcik && _claudeKod.Var && _saniyeSayac % 3 == 0 && _claudeKod.Tik()) _kuyruk.Ekle(new Duyuru(DuyuruTuru.Bilgi, "Claude Code bekliyor", "oturum durdu; bitti ya da onayını bekliyor", Simge: "uE8F2", SaniyeOverride: 10, Anahtar: "claudekod"));
         if (_genis && GenisBos.Visibility == Visibility.Visible) SistemHalkalariGuncelle();
 
         if (_hwnd != IntPtr.Zero)
@@ -2558,10 +2560,10 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
             GenisSoru.Visibility = Visibility.Visible;
             GenisSoru.Height = double.NaN;
             GenisSoru.UpdateLayout();
-            GenisSoru.Measure(new Size(380, double.PositiveInfinity));
+            GenisSoru.Measure(new Size(430, double.PositiveInfinity));
             double ys = Math.Clamp(GenisSoru.DesiredSize.Height + 2, 100, 440);
             GenisSoru.Height = ys - 2;
-            Gecis(GenisSoru, 380, ys, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
+            Gecis(GenisSoru, 430, ys, new BackEase { Amplitude = 0.18, EasingMode = EasingMode.EaseOut }, 320);
             Ada.CornerRadius = new CornerRadius(26);
             return;
         }
@@ -2765,6 +2767,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "sor": { string soru = string.Join(' ', p.Skip(1)); SoruPaneliAc(odakla: false); if (soru.Length > 0) _ = SoruGonderAsync(soru); break; }
                     case "sor-kapat": SoruKapat_Click(this, new RoutedEventArgs()); break;
                     case "sor-kaydet": SoruKaydet_Click(this, new RoutedEventArgs()); break;
+                    case "claudekod": _claudeKod.Tik(); Gunluk($"claudekod: var={_claudeKod.Var} durum={_claudeKod.Durum} oturum={_claudeKod.AktifOturum}"); break;
                     case "altyazi": { bool d = _altyazi.Oku(); _ = _altyazi.CevirAsync().ContinueWith(_ => Dispatcher.BeginInvoke(() => Gunluk($"altyazi: pencere={_altyazi.PencereVar()} aktif={_altyazi.Aktif} degisti={d} orijinal='{_altyazi.Orijinal}' turkce='{_altyazi.Turkce}'"))); break; }
                     case "efekt": { var tur = Enum.TryParse<SesEfektServisi.Efekt>(p.Length > 1 ? p[1] : "Ac", true, out var ef) ? ef : SesEfektServisi.Efekt.Ac; _efekt.Acik = true; _efekt.Cal(tur); Gunluk($"efekt {tur}: hata='{_efekt.SonHata}'"); break; }
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }

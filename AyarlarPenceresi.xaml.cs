@@ -46,6 +46,7 @@ public partial class AyarlarPenceresi : Window
         SesOsdGizle.IsChecked = _ayar.SesOsdGizle;
         SesEfektleriAcik.IsChecked = _ayar.SesEfektleriAcik;
         AltyaziAcik.IsChecked = _ayar.AltyaziAcik;
+        ClaudeKodAcik.IsChecked = _ayar.ClaudeKodAcik;
         SesEfektSeviye.Value = _ayar.SesEfektSeviye;
         IndirmeIzleAcik.IsChecked = _ayar.IndirmeIzleAcik;
         TelefondanHazneyeAcik.IsChecked = _ayar.TelefondanHazneyeAcik;
@@ -175,6 +176,7 @@ public partial class AyarlarPenceresi : Window
         _ayar.SesOsdGizle = SesOsdGizle.IsChecked == true;
         _ayar.SesEfektleriAcik = SesEfektleriAcik.IsChecked == true;
         _ayar.AltyaziAcik = AltyaziAcik.IsChecked == true;
+        _ayar.ClaudeKodAcik = ClaudeKodAcik.IsChecked == true;
         _ayar.SesEfektSeviye = (int)SesEfektSeviye.Value;
         _ayar.IndirmeIzleAcik = IndirmeIzleAcik.IsChecked == true;
         _ayar.TelefondanHazneyeAcik = TelefondanHazneyeAcik.IsChecked == true;
