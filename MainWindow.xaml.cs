@@ -63,6 +63,7 @@ public partial class MainWindow : Window
     private readonly KarisimServisi _karisim = new();       // uygulama başına ses ve çıkış aygıtı
     private readonly SesCogaltServisi _coklu = new();        // sesi tum aktif cikis aygitlarindan ayni anda calma (loopback kopya)
     private readonly PanoGecmisServisi _panoGecmis = new();   // kopyalanan metinlerin gecmisi (oturum ici)
+    private readonly SifreServisi _sifre = new();            // sifre uret ve sakla (sifreli json)
     private readonly SesOsdServisi _sesOsd = new();         // Windows ses barını gizle
     private readonly DispatcherTimer _osdZaman = new() { Interval = TimeSpan.FromMilliseconds(60) };
     private int _osdSayac;
@@ -725,39 +726,73 @@ public partial class MainWindow : Window
 
     private void QrKapat_Click(object sender, RoutedEventArgs e) { _qrGoster = false; if (_genis) Genislet(); }
 
-    // ---------- Geliştirici araçları ----------
-    private void AraclarAc_Click(object sender, RoutedEventArgs e) { _araclarGoster = true; _panoGoster = false; _qrGoster = false; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); Genislet(); }
+    // ---------- Şifreler (üret ve sakla) ----------
+    private bool _sifreRakam = true, _sifreSimge = true, _sifreBenzersiz;
+
+    private void AraclarAc_Click(object sender, RoutedEventArgs e) { _araclarGoster = true; _panoGoster = false; _qrGoster = false; _genis = true; _daraltGecikme.Stop(); FareBekleBaslat(); SifreSecenekGuncelle(); SifreYenile(); Genislet(); }
     private void AraclarKapat_Click(object sender, RoutedEventArgs e) { _araclarGoster = false; if (_genis) Genislet(); }
 
-    private void Arac_Click(object sender, RoutedEventArgs e)
+    private void SifreUzunluk_Degisti(object sender, RoutedPropertyChangedEventArgs<double> e) { if (SifreUzunlukMetin != null) SifreUzunlukMetin.Text = ((int)e.NewValue).ToString(); }
+
+    private void SifreSecenek_Click(object sender, RoutedEventArgs e)
     {
-        string islem = (sender as Button)?.CommandParameter as string ?? (sender as FrameworkElement)?.Tag as string ?? "";
-        string g = AraclarGiris.Text;
-        var (sonuc, ok) = islem switch
-        {
-            "b64kodla" => GelistiriciAraclari.Base64Kodla(g),
-            "b64coz"   => GelistiriciAraclari.Base64Coz(g),
-            "urlkodla" => GelistiriciAraclari.UrlKodla(g),
-            "urlcoz"   => GelistiriciAraclari.UrlCoz(g),
-            "json"     => GelistiriciAraclari.JsonDuzenle(g),
-            "sha256"   => GelistiriciAraclari.Sha256(g),
-            "md5"      => GelistiriciAraclari.Md5(g),
-            "jwt"      => GelistiriciAraclari.JwtCoz(g),
-            "epoch"    => GelistiriciAraclari.EpochCevir(g),
-            "uuid"     => GelistiriciAraclari.UuidUret(),
-            "say"      => GelistiriciAraclari.Say(g),
-            _          => ("", false),
-        };
-        AraclarCikti.Text = sonuc;
-        AraclarCiktiKutu.Visibility = Visibility.Visible;
-        AraclarAltSatir.Visibility = ok && sonuc.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        AraclarCikti.Foreground = ok ? (System.Windows.Media.Brush)FindResource("MetinBirincil") : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0xFF, 0x9F, 0x0A));
-        _efekt?.Cal(ok ? SesEfektServisi.Efekt.Tik : SesEfektServisi.Efekt.Hata);
-        if (_genis) Genislet();   // çıktı yüksekliğine göre yeniden boyutla
+        if (sender == SifreRakamDugme) _sifreRakam = !_sifreRakam;
+        else if (sender == SifreSimgeDugme) _sifreSimge = !_sifreSimge;
+        else if (sender == SifreBenzersizDugme) _sifreBenzersiz = !_sifreBenzersiz;
+        SifreSecenekGuncelle();
     }
 
-    private void AraclarKopyala_Click(object sender, RoutedEventArgs e) { if (AraclarCikti.Text.Length > 0 && PanoyaKopyala(AraclarCikti.Text)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Panoya kopyalandı", "", Simge: "", SaniyeOverride: 2, Anahtar: "pano")); } }
-    private void AraclarQr_Click(object sender, RoutedEventArgs e) { if (AraclarCikti.Text.Length > 0) QrAc(AraclarCikti.Text); }
+    private void SifreSecenekGuncelle()
+    {
+        if (SifreRakamDugme == null) return;
+        void Ayarla(Button b, bool acik, string ad)
+        {
+            b.Content = (acik ? "✓ " : "") + ad;
+            b.Background = acik ? (System.Windows.Media.Brush)FindResource("Vurgu")
+                                : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+        }
+        Ayarla(SifreRakamDugme, _sifreRakam, "Rakam");
+        Ayarla(SifreSimgeDugme, _sifreSimge, "Simge");
+        Ayarla(SifreBenzersizDugme, _sifreBenzersiz, "Karışanları ele");
+    }
+
+    private void SifreUret_Click(object sender, RoutedEventArgs e)
+    {
+        SifreUretilen.Text = SifreServisi.Uret((int)SifreUzunluk.Value, _sifreRakam, _sifreSimge, _sifreBenzersiz);
+        SifreUretilenKutu.Visibility = Visibility.Visible;
+        _efekt?.Cal(SesEfektServisi.Efekt.Tik);
+        if (_genis) Genislet();
+    }
+
+    private void SifreUretilenKopyala_Click(object sender, RoutedEventArgs e) { if (SifreUretilen.Text.Length > 0 && PanoyaKopyala(SifreUretilen.Text)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Şifre panoya kopyalandı", "", Simge: "", SaniyeOverride: 2, Anahtar: "sifre")); } }
+    private void SifreUretilenQr_Click(object sender, RoutedEventArgs e) { if (SifreUretilen.Text.Length > 0) QrAc(SifreUretilen.Text); }
+
+    private void SifreKaydet_Click(object sender, RoutedEventArgs e)
+    {
+        string sifre = SifreUretilen.Text;
+        if (sifre.Length == 0) { _kuyruk.Ekle(new Duyuru(DuyuruTuru.Uyari, "Önce şifre üretin", "Üret düğmesine basın", Simge: "", SaniyeOverride: 3, Anahtar: "sifre")); return; }
+        _sifre.Ekle(SifreAd.Text, sifre);
+        SifreAd.Text = "";
+        _efekt?.Cal(SesEfektServisi.Efekt.Basari);
+        SifreYenile();
+        if (_genis) Genislet();
+    }
+
+    private void SifreYenile()
+    {
+        SifreListe.ItemsSource = null;
+        SifreListe.ItemsSource = _sifre.Kayitlar;
+        int n = _sifre.Kayitlar.Count;
+        SifreSayac.Text = n > 0 ? n.ToString() : "";
+        SifreBos.Visibility = n == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static SifreServisi.Kayit? SifreKaydi(object sender) => (sender as FrameworkElement)?.Tag as SifreServisi.Kayit;
+
+    private void SifreGoster_Click(object sender, RoutedEventArgs e) { var k = SifreKaydi(sender); if (k != null) { k.Acik = !k.Acik; SifreYenile(); } }
+    private void SifreKopyala_Click(object sender, RoutedEventArgs e) { var k = SifreKaydi(sender); if (k != null && PanoyaKopyala(k.Sifre)) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _kuyruk.Ekle(new Duyuru(DuyuruTuru.Basari, "Şifre panoya kopyalandı", k.Ad, Simge: "", SaniyeOverride: 2, Anahtar: "sifre")); } }
+    private void SifreQr_Click(object sender, RoutedEventArgs e) { var k = SifreKaydi(sender); if (k != null) QrAc(k.Sifre); }
+    private void SifreSil_Click(object sender, RoutedEventArgs e) { var k = SifreKaydi(sender); if (k != null) { _efekt?.Cal(SesEfektServisi.Efekt.Tik); _sifre.Cikar(k); SifreYenile(); if (_genis) Genislet(); } }
 
     // ---------- Ekran görüntüsü ----------
     private void EkranGoruntusu_Click(object sender, RoutedEventArgs e) => EkranGoruntusuAl();
@@ -2998,7 +3033,7 @@ hr {{ border: none; border-top: 1px solid #e5e5ea; margin: 22px 0; }}
                     case "sor-yaz": { SoruPaneliAc(odakla: false); SoruKutu.Text = p.Length > 1 ? string.Join(' ', p.Skip(1)) : ""; SoruGonder_Click(this, new RoutedEventArgs()); break; }
                     case "karisim": KarisimAc_Click(this, new RoutedEventArgs()); break;
                     case "ekran": EkranGoruntusuAl(); break;
-                    case "arac": { AraclarAc_Click(this, new RoutedEventArgs()); if (p.Length > 2) { AraclarGiris.Text = string.Join(' ', p.Skip(2)); Arac_Click(new Button { Tag = p[1] }, new RoutedEventArgs()); string aracCikti = AraclarCikti.Text.Replace((char)10, '|'); Gunluk("arac " + p[1] + ": cikti='" + aracCikti + "'"); } break; }
+                    case "arac": case "sifre": { AraclarAc_Click(this, new RoutedEventArgs()); if (p.Length > 1 && p[1] == "uret") { SifreUret_Click(this, new RoutedEventArgs()); Gunluk("sifre uret: " + SifreUretilen.Text + " (uzunluk " + SifreUretilen.Text.Length + ")"); } else if (p.Length > 2 && p[1] == "kaydet") { SifreUret_Click(this, new RoutedEventArgs()); SifreAd.Text = string.Join(' ', p.Skip(2)); SifreKaydet_Click(this, new RoutedEventArgs()); Gunluk("sifre kaydet: " + string.Join(' ', p.Skip(2)) + " toplam=" + _sifre.Kayitlar.Count); } break; }
                     case "pano": PanoAc_Click(this, new RoutedEventArgs()); Gunluk($"pano: oge={_panoGecmis.Ogeler.Count}"); break;
                     case "qr": QrAc(p.Length > 1 ? string.Join(' ', p.Skip(1)) : "https://twinshareapp.com/paylas/ornek"); Gunluk($"qr: metin uzunluk={_qrMetin.Length} resim={(QrKodResim.Source != null)}"); break;
                     case "coklu": { if (p.Length > 1 && p[1] == "0") { _coklu.Durdur(); } else { int n = _coklu.Baslat(); Gunluk($"coklu baslat: n={n}"); } Gunluk($"coklu: aktif={_coklu.Aktif} durum={_coklu.Durum}"); CokluDurumGuncelle(); break; }

@@ -591,48 +591,87 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- ============ GENİŞ, geliştirici araçları ============ -->
+                <!-- ============ GENİŞ, şifreler ============ -->
                 <Grid x:Name="GenisAraclar" Opacity="0" IsHitTestVisible="False" Visibility="Collapsed"
                       Width="430" VerticalAlignment="Top" HorizontalAlignment="Left">
                     <StackPanel Margin="16,12,16,12">
                         <Grid>
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="&#xE943;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
-                                <TextBlock Text="Geliştirici araçları" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                                <TextBlock Text="&#xE8D7;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{StaticResource Vurgu}" VerticalAlignment="Center"/>
+                                <TextBlock Text="Şifreler" FontSize="13" FontWeight="SemiBold" Margin="8,0,0,0" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="SifreSayac" FontSize="10" Margin="8,1,0,0" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Text=""/>
                             </StackPanel>
                             <Button Style="{StaticResource SimgeDugme}" HorizontalAlignment="Right" Width="26" Height="26" FontSize="11" Content="&#xE711;" ToolTip="Kapat" Click="AraclarKapat_Click"/>
                         </Grid>
-                        <Border CornerRadius="9" Background="#14FFFFFF" Margin="0,8,0,0">
-                            <TextBox x:Name="AraclarGiris" Background="Transparent" BorderThickness="0" Foreground="{StaticResource MetinBirincil}" CaretBrush="{StaticResource MetinBirincil}"
-                                     SelectionBrush="{StaticResource Vurgu}" FontSize="12" FontFamily="Cascadia Mono, Consolas" Padding="10,7" TextWrapping="Wrap" AcceptsReturn="True"
-                                     MinHeight="46" MaxHeight="90" VerticalScrollBarVisibility="Auto"/>
-                        </Border>
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="Uzunluk" FontSize="11.5" Foreground="{StaticResource MetinIkincil}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <Slider x:Name="SifreUzunluk" Grid.Column="1" Minimum="8" Maximum="40" Value="16" IsSnapToTickEnabled="True" TickFrequency="1" VerticalAlignment="Center" ValueChanged="SifreUzunluk_Degisti"/>
+                            <TextBlock x:Name="SifreUzunlukMetin" Grid.Column="2" Text="16" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" VerticalAlignment="Center" Width="22" TextAlignment="Right"/>
+                        </Grid>
                         <WrapPanel Margin="-4,8,0,0">
-                            <Button Style="{StaticResource AltDugme}" Content="Base64 kodla" CommandParameter="b64kodla" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="Base64 çöz" CommandParameter="b64coz" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="URL kodla" CommandParameter="urlkodla" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="URL çöz" CommandParameter="urlcoz" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="JSON düzenle" CommandParameter="json" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="SHA256" CommandParameter="sha256" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="MD5" CommandParameter="md5" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="JWT çöz" CommandParameter="jwt" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="Epoch" CommandParameter="epoch" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="UUID" CommandParameter="uuid" Click="Arac_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Content="Say" CommandParameter="say" Click="Arac_Click"/>
+                            <Button x:Name="SifreRakamDugme" Style="{StaticResource AltDugme}" Content="Rakam" Click="SifreSecenek_Click"/>
+                            <Button x:Name="SifreSimgeDugme" Style="{StaticResource AltDugme}" Content="Simge" Click="SifreSecenek_Click"/>
+                            <Button x:Name="SifreBenzersizDugme" Style="{StaticResource AltDugme}" Content="Karışanları ele" Click="SifreSecenek_Click" ToolTip="0 O 1 l I gibi benzer karakterleri kullanma"/>
+                            <Button Style="{StaticResource AltDugme}" Tag="&#xE72C;" Content="Üret" Click="SifreUret_Click"/>
                         </WrapPanel>
-                        <Border x:Name="AraclarCiktiKutu" CornerRadius="9" Background="#1AFFFFFF" Margin="0,8,0,0" Visibility="Collapsed">
-                            <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
-                                <ScrollViewer.Resources>
-                                    <Style TargetType="ScrollBar" BasedOn="{StaticResource InceKaydirma}"/>
-                                </ScrollViewer.Resources>
-                                <TextBox x:Name="AraclarCikti" IsReadOnly="True" Background="Transparent" BorderThickness="0" TextWrapping="Wrap" FontSize="12"
-                                         FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" Padding="10,7"/>
-                            </ScrollViewer>
+                        <Border x:Name="SifreUretilenKutu" CornerRadius="9" Background="#1AFFFFFF" Margin="0,8,0,0" Padding="2" Visibility="Collapsed">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="SifreUretilen" Grid.Column="0" IsReadOnly="True" Background="Transparent" BorderThickness="0" FontSize="14" FontWeight="SemiBold" FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" Padding="10,7" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xE8C8;" ToolTip="Kopyala" Click="SifreUretilenKopyala_Click"/>
+                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xED14;" ToolTip="QR" Click="SifreUretilenQr_Click"/>
+                                </StackPanel>
+                            </Grid>
                         </Border>
-                        <StackPanel x:Name="AraclarAltSatir" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0" Visibility="Collapsed">
-                            <Button Style="{StaticResource AltDugme}" Tag="&#xE8C8;" Content="Kopyala" Click="AraclarKopyala_Click"/>
-                            <Button Style="{StaticResource AltDugme}" Tag="&#xED14;" Content="QR" Click="AraclarQr_Click" ToolTip="Sonucu telefonla oku"/>
-                        </StackPanel>
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" CornerRadius="9" Background="#14FFFFFF" Margin="0,0,6,0">
+                                <TextBox x:Name="SifreAd" Background="Transparent" BorderThickness="0" Foreground="{StaticResource MetinBirincil}" CaretBrush="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" FontSize="12" Padding="10,7" VerticalContentAlignment="Center" ToolTip="Ad / site (örn. GitHub)"/>
+                            </Border>
+                            <Button Grid.Column="1" Style="{StaticResource AltDugme}" Tag="&#xE74E;" Content="Kaydet" Click="SifreKaydet_Click" ToolTip="Üretilen ya da yazılan şifreyi bu adla sakla"/>
+                        </Grid>
+                        <ScrollViewer x:Name="SifreKaydir" MaxHeight="220" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                            <ScrollViewer.Resources>
+                                <Style TargetType="ScrollBar" BasedOn="{StaticResource InceKaydirma}"/>
+                            </ScrollViewer.Resources>
+                            <ItemsControl x:Name="SifreListe">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#12FFFFFF" CornerRadius="8" Margin="0,0,0,6" Padding="10,6">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <TextBlock Text="{Binding Ad}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource MetinBirincil}" TextTrimming="CharacterEllipsis"/>
+                                                    <TextBlock Text="{Binding Gorunen}" FontSize="11.5" FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource MetinIkincil}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="11" Content="&#xE7B3;" Tag="{Binding}" ToolTip="Göster / gizle" Click="SifreGoster_Click"/>
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="10" Content="&#xE8C8;" Tag="{Binding}" ToolTip="Kopyala" Click="SifreKopyala_Click"/>
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="11" Content="&#xED14;" Tag="{Binding}" ToolTip="QR" Click="SifreQr_Click"/>
+                                                    <Button Style="{StaticResource SimgeDugme}" Width="24" Height="24" FontSize="10" Content="&#xE74D;" Tag="{Binding}" ToolTip="Sil" Click="SifreSil_Click"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <TextBlock x:Name="SifreBos" FontSize="11.5" Foreground="{StaticResource MetinIkincil}" Margin="2,4,0,4" TextWrapping="Wrap" Text="Henüz kayıtlı şifre yok. Üretip ya da yazıp bir adla kaydedin. Şifreler Windows hesabınıza bağlı şifreli JSON olarak saklanır." Visibility="Collapsed"/>
                     </StackPanel>
                 </Grid>
 
@@ -810,9 +849,9 @@
                                             <TextBlock x:Name="PanoRozetSayi" FontSize="8.5" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Text=""/>
                                         </Border>
                                     </Grid>
-                                    <!-- Geliştirici araçları -->
-                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE943;"
-                                            ToolTip="Geliştirici araçları: base64, JSON, hash, JWT, epoch" Click="AraclarAc_Click"/>
+                                    <!-- Şifreler: üret ve sakla -->
+                                    <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE8D7;"
+                                            ToolTip="Şifreler: güçlü şifre üret ve sakla" Click="AraclarAc_Click"/>
                                     <!-- Ses karışımı: uygulama başına seviye ve çıkış aygıtı (monitör hoparlörleri) -->
                                     <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Margin="6,0,0,0" Content="&#xE9E9;"
                                             ToolTip="Ses karışımı: uygulama başına ses ve çıkış aygıtı" Click="KarisimAc_Click"/>

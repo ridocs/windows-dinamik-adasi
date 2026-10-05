@@ -46,7 +46,7 @@ Boş panelde ses çubuğunun sağında dört küçük düğme vardır: ekran gö
 
 - **Ekran görüntüsü (kamera):** Ön plandaki pencereyi yakalar (pencere küçükse tüm ekranı). Kapsül görüntüye girmez. PNG `Resimler\DinamikAda` altına kaydedilir ve hazneye eklenir. Haznedeki görüntüyü "Link" düğmesiyle sunucuya yükleyip bağlantısını alır, o bağlantıyı QR ile telefona okutabilirsiniz.
 - **Pano geçmişi:** Kopyaladığınız son metinler burada listelenir (oturum içi, en çok 30). Bir satıra tıklayınca panoya geri kopyalar. Her satırda kopyala, QR ve sil düğmeleri vardır. QR ile bir linki ya da metni telefonunuzda anında açarsınız. Ayarlardan kapatılabilir.
-- **Geliştirici araçları ({}):** Metin kutusuna bir şey yazıp ya da yapıştırıp düğmelerden birini seçin: Base64 kodla/çöz, URL kodla/çöz, JSON düzenle, SHA256, MD5, JWT çöz (başlık ve gövde), Epoch (saniye/ms ile tarih arası), UUID üret, satır/kelime/karakter say. Çıktıyı kopyalar ya da QR ile telefona gönderirsiniz.
+- **Şifreler (anahtar simgesi):** Uzunluğu seçin (8-40), Rakam/Simge/Karışanları ele düğmeleriyle içeriği ayarlayın ve "Üret"e basın. Üretilen şifreyi kopyalar ya da QR ile telefona gönderirsiniz. Alt alana bir ad (örneğin GitHub) yazıp "Kaydet" ile saklarsınız. Saklanan şifreler listede ad ve maskeli biçimde durur; satırdaki göz düğmesi gösterir/gizler, diğerleri kopyalar, QR yapar ve siler. Şifreler Windows hesabınıza bağlı şifreli JSON (`%AppData%\DinamikAda\sifreler.json`) olarak saklanır, dosyada düz metin görünmez.
 - **QR:** Pano ve araçlar panellerindeki QR düğmeleri "Telefonla oku" panelini açar; büyük QR kodunu telefon kamerasıyla okutursunuz.
 
 ---

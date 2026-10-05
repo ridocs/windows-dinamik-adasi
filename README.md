@@ -29,7 +29,7 @@ Kişisel kullanım için geliştirildi, topluluğa açıldı. Türkçe arayüz, 
 - Tüm aygıtlarda çal: varsayılan aygıttaki sesi bağlı tüm çıkış aygıtlarından (hoparlörler, kulaklık) aynı anda çalar; ses karışımı panelindeki tek düğmeyle açılıp kapanır.
 - Pano geçmişi: kopyalanan son metinler tutulur; tıklayınca geri kopyalanır, QR ile telefona okutulur ya da silinir.
 - QR üretici: herhangi bir metni ya da bağlantıyı QR koduna çevirip telefonla (iOS, Android) okutma; saf C#, harici kurulum yok.
-- Geliştirici araçları: base64, URL, JSON düzenle, SHA256, MD5, JWT çöz, epoch, UUID, sayım; panodaki içeriği tek tıkla dönüştürüp kopyalama ya da QR.
+- Şifreler: güçlü şifre üretir (uzunluk, rakam, simge, karışan karakterleri eleme) ve adlandırıp saklar; liste satırında göster, kopyala, QR ve sil. Şifreler Windows hesabınıza bağlı DPAPI ile şifrelenmiş JSON olarak tutulur, düz metin değildir.
 - Ekran görüntüsü: ön plandaki pencereyi (ya da tüm ekranı) yakalayıp hazneye ekler; oradan sunucuya yükleyip link ve QR ile paylaşılabilir.
 - Kısayol çubuğu: kurulu uygulamalardan seçilen simgeler, sürükle-bırak ile düzenleme.
 - Claude'a sor: kapsülün içinde soru, seçili metni özetle / çevir, panoyu özetle. Yanıtı masaüstüne profesyonel .md ya da yazdırılabilir .html olarak kaydetme. "not: ..." ile masaüstü not dosyasına, "hatırlat: 14:30 ..." ile zamanlı hatırlatıcı. API anahtarı yoksa makinedeki Claude Code CLI kullanılır.
