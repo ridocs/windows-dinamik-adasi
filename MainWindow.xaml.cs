@@ -759,7 +759,6 @@ public partial class MainWindow : Window
     private void SifreUret_Click(object sender, RoutedEventArgs e)
     {
         SifreUretilen.Text = SifreServisi.Uret((int)SifreUzunluk.Value, _sifreRakam, _sifreSimge, _sifreBenzersiz);
-        SifreUretilenKutu.Visibility = Visibility.Visible;
         _efekt?.Cal(SesEfektServisi.Efekt.Tik);
         if (_genis) Genislet();
     }

@@ -619,13 +619,13 @@
                             <Button x:Name="SifreBenzersizDugme" Style="{StaticResource AltDugme}" Content="Karışanları ele" Click="SifreSecenek_Click" ToolTip="0 O 1 l I gibi benzer karakterleri kullanma"/>
                             <Button Style="{StaticResource AltDugme}" Tag="&#xE72C;" Content="Üret" Click="SifreUret_Click"/>
                         </WrapPanel>
-                        <Border x:Name="SifreUretilenKutu" CornerRadius="9" Background="#1AFFFFFF" Margin="0,8,0,0" Padding="2" Visibility="Collapsed">
+                        <Border x:Name="SifreUretilenKutu" CornerRadius="9" Background="#1AFFFFFF" Margin="0,8,0,0" Padding="2">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="SifreUretilen" Grid.Column="0" IsReadOnly="True" Background="Transparent" BorderThickness="0" FontSize="14" FontWeight="SemiBold" FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" Padding="10,7" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                <TextBox x:Name="SifreUretilen" Grid.Column="0" Background="Transparent" BorderThickness="0" FontSize="14" FontWeight="SemiBold" FontFamily="Cascadia Mono, Consolas" Foreground="{StaticResource MetinBirincil}" SelectionBrush="{StaticResource Vurgu}" Padding="10,7" VerticalAlignment="Center" TextWrapping="Wrap"/>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                                     <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xE8C8;" ToolTip="Kopyala" Click="SifreUretilenKopyala_Click"/>
                                     <Button Style="{StaticResource SimgeDugme}" Width="26" Height="26" FontSize="12" Content="&#xED14;" ToolTip="QR" Click="SifreUretilenQr_Click"/>
